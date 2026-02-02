@@ -1,101 +1,128 @@
 # 🎮 EduPlay Offline
 
-**11 Learning Games. One Safe App. No Internet Needed.**
+**15 Learning Games. One Safe App. No Internet Needed.**
 
-A comprehensive educational mobile game application built with React Native and Expo, featuring 11 engaging games designed to help children aged 5-10 learn math, reading, geography, logic, and more—all completely offline!
+A comprehensive educational mobile game app built with React Native and Expo. Fifteen games help children aged 3–12 learn math, reading, geography, logic, colors, letters, numbers, and more—all offline.
+
+- **App version:** 1.0.3 · **Expo SDK:** 54
 
 ---
 
 ## 🌟 Features
 
-### ✅ **100% Offline**
-- No internet connection required
-- All data stored locally with SQLite
+### ✅ 100% Offline
+- No internet required
+- Local data with SQLite (expo-sqlite)
 - Works anywhere, anytime
 
-### 🎯 **11 Educational Games**
-1. **👾 Math Monsters Arena** - Battle monsters by solving math problems
-2. **📚 Story Builder Kids** - Create stories by learning grammar
-3. **🌍 World Explorer** - Learn geography through interactive maps
-4. **🎨 Art Detective** - Identify shapes, colors, and patterns
-5. **🧪 Science Tap Lab** - Discover cause and effect through experiments
-6. **🍕 Chef Fractions** - Master fractions by slicing food
-7. **🚀 Code Blocks Junior** - Learn coding logic with visual blocks
-8. **🌱 Eco Guardians** - Environmental responsibility missions
-9. **🎵 Music Rhythm Tiles** - Develop rhythm and timing skills
-10. **🧩 Logic Town Builder** - Build cities using logic and planning
-11. **🍎 Fruit Finder** - Learn fruit names through fun identification
+### 🎯 15 Educational Games
+1. **👾 Math Monsters** – Addition, subtraction, multiplication
+2. **📚 Story Builder** – Create stories with word choices
+3. **🌍 World Explorer** – Geography and country quizzes
+4. **🎨 Art Detective** – Find matching shapes and patterns
+5. **🧪 Science Lab** – Simple experiments (volcano, magnet, rainbow)
+6. **🍕 Chef Fractions** – Fractions with food slices
+7. **🚀 Code Blocks** – Visual coding (MOVE, TURN) to reach the star
+8. **🌱 Eco Guardians** – Missions (ocean, trees, animals, recycle)
+9. **🎵 Music Rhythm** – Tap tiles in rhythm
+10. **🧩 Logic Town** – Build structures with logic rules
+11. **🍎 Fruit Finder** – Identify fruits (A/B/C or type)
+12. **🌈 Color Match Parade** – Tap the target color
+13. **🎈 Letter Pop Balloons** – Pop the target letter
+14. **🐸 Number Hop** – Tap numbers in order (1→2→…→7)
+15. **🐾 Animal Sound Match** – Match real animal sounds (moo, woof, meow, etc.)
 
-### 👨‍👩‍👧 **Parent Dashboard**
-- Track progress across all games
-- View playtime and scores
-- Monitor skill development
-- Safe, ad-free environment
+### 👨‍👩‍👧 Parent Dashboard
+- **Adjust difficulty** – Easy, Normal, or Hard (affects all games)
+- **Screen time limit** – Set daily limit (minutes)
+- **Game sounds** – Toggle playful ringtone in games
+- **Progress** – View levels, scores, playtime per game
+- **Export report** – Copy progress summary
+- **Reset progress** – Clear all game data
 
-### 🏆 **Progress Tracking**
-- Level progression system
-- Star-based achievements
-- Score tracking
-- Rewards and motivational feedback
+### 🏆 Progress & Rewards
+- Level progression and stars per game
+- Score and playtime tracking
+- Reward modals and in-game guides
+- Progress saved locally
 
 ---
 
 ## 🛠️ Tech Stack
 
-- **Framework:** React Native with Expo SDK 52
+- **Framework:** React Native with **Expo SDK 54**
 - **Language:** TypeScript
-- **Database:** SQLite (expo-sqlite ~15.0.0)
-- **State Management:** Zustand
-- **Navigation:** React Navigation
-- **Game Engine:** react-native-game-engine
-- **Animations:** react-native-reanimated (~3.16.0)
-- **Gestures:** react-native-gesture-handler (~2.20.0)
-- **Graphics:** @shopify/react-native-skia
-- **Audio:** expo-av (~15.0.0)
+- **Database:** SQLite (expo-sqlite)
+- **State:** Zustand
+- **Navigation:** React Navigation (stack)
+- **Audio:** expo-av, expo-speech; animal sounds from bundled MP3s or generated WAV tones
+- **Graphics:** @shopify/react-native-skia, Lottie
 
 ---
 
 ## 📂 Project Structure
 
 ```
-eduplay-offline/
-├── App.tsx                 # Entry point
-├── app.json                # Expo configuration
-├── package.json            # Dependencies
-├── tsconfig.json           # TypeScript config
-└── src/
-    ├── navigation/
-    │   └── RootNavigator.tsx       # Navigation setup
-    ├── screens/
-    │   ├── HomeScreen.tsx          # Welcome screen
-    │   ├── GameSelectScreen.tsx    # Game selection hub
-    │   └── ParentDashboard.tsx     # Parent monitoring
-    ├── games/
-    │   ├── mathMonsters/           # Math game
-    │   ├── storyBuilder/           # Story creation game
-    │   ├── worldExplorer/          # Geography game
-    │   ├── artDetective/           # Pattern recognition
-    │   ├── scienceLab/             # Science experiments
-    │   ├── chefFractions/          # Fractions game
-    │   ├── codeBlocks/             # Coding logic
-    │   ├── ecoGuardians/           # Environment game
-    │   ├── musicRhythm/            # Music timing
-    │   ├── logicTown/              # Logic building
-    │   └── fruitFinder/           # Fruit identification
-    ├── components/
-    │   ├── GameCard.tsx            # Reusable game card
-    │   ├── ProgressBar.tsx         # Progress indicator
-    │   └── RewardModal.tsx         # Achievement popup
-    ├── database/
-    │   ├── db.ts                   # SQLite operations
-    │   └── schema.ts               # Database schema
-    ├── store/
-    │   ├── userStore.ts            # User state
-    │   └── progressStore.ts        # Progress state
-    └── utils/
-        ├── sound.ts                # Audio utilities
-        ├── animations.ts           # Animation helpers
-        └── math.ts                 # Math utilities
+Educative Games/
+├── App.tsx                    # Entry point
+├── app.json                   # Expo config (icon: logo.png)
+├── eas.json                   # EAS Build profiles (apk, aab, production)
+├── package.json
+├── src/
+│   ├── navigation/
+│   │   └── RootNavigator.tsx
+│   ├── screens/
+│   │   ├── HomeScreen.tsx     # Home + welcome setup (name, age)
+│   │   ├── GameSelectScreen.tsx
+│   │   └── ParentDashboard.tsx
+│   ├── games/
+│   │   ├── mathMonsters/
+│   │   ├── storyBuilder/
+│   │   ├── worldExplorer/
+│   │   ├── artDetective/
+│   │   ├── scienceLab/
+│   │   ├── chefFractions/
+│   │   ├── codeBlocks/
+│   │   ├── ecoGuardians/
+│   │   ├── musicRhythm/
+│   │   ├── logicTown/
+│   │   ├── fruitFinder/
+│   │   ├── colorMatchParade/
+│   │   ├── letterPopBalloons/
+│   │   ├── numberHop/
+│   │   └── animalSoundMatch/
+│   ├── components/
+│   │   ├── GameCard.tsx
+│   │   ├── GameGuide.tsx
+│   │   ├── ProgressBar.tsx
+│   │   └── RewardModal.tsx
+│   ├── database/
+│   │   ├── db.ts
+│   │   └── schema.ts
+│   ├── store/
+│   │   ├── userStore.ts
+│   │   └── progressStore.ts
+│   └── utils/
+│       ├── sound.ts             # Music, effects, animal sounds
+│       ├── math.ts              # Math questions (with difficulty)
+│       ├── difficulty.ts        # Easy/Normal/Hard from settings
+│       ├── wavTone.ts           # WAV tone generator (fallback)
+│       ├── animalSoundAssets.ts  # Bundled animal MP3s
+│       ├── tonePlayer.ts         # Tone playback
+│       ├── voice.ts              # Speech/voice helpers
+│       ├── audioGenerator.ts     # Audio generation
+│       └── animations.ts         # Shared animation helpers
+├── assets/
+│   ├── logo.png               # App icon + in-app logo
+│   ├── splash.png
+│   ├── icon.png / adaptive-icon.png / favicon.png (optional)
+│   ├── sounds/
+│   │   └── animals/           # cow.mp3, dog.mp3, … (run download script)
+│   └── images/
+└── scripts/
+    ├── create-icons.js              # Generate app icons from logo
+    ├── create-placeholder-icons.js  # Placeholder icon assets
+    └── download-animal-sounds.js    # Fetches real animal MP3s
 ```
 
 ---
@@ -103,232 +130,108 @@ eduplay-offline/
 ## 🚀 Getting Started
 
 ### Prerequisites
-- Node.js (v18 or higher recommended)
-- npm or yarn
-- Expo CLI (`npm install -g @expo/cli` or `npm install -g expo-cli`)
-- iOS Simulator (Mac) or Android Emulator
-- **Expo SDK 52** (already configured)
+- Node.js (v18+)
+- npm
+- Expo CLI / EAS CLI for builds
 
-### Installation
+### Install & run
 
-1. **Navigate to project directory:**
+1. **Clone or open the project and install:**
    ```bash
-   cd "C:\Users\ffgallibot\Desktop\Systems\Educative Games"
-   ```
-
-2. **Install dependencies (SDK 52 compatible):**
-   ```bash
+   cd path/to/Educative-Games
    npm install
-   # or use expo install for guaranteed compatibility
-   npx expo install --fix
    ```
 
-3. **Start the development server:**
+2. **Optional – real animal sounds (Animal Sound Match):**
+   ```bash
+   node scripts/download-animal-sounds.js
+   ```
+   Downloads MP3s into `assets/sounds/animals/`. If skipped, the game uses tone fallbacks.
+
+3. **Start dev server:**
    ```bash
    npx expo start
-   # or
-   npm start
+   # or with cache clear
+   npx expo start --clear
    ```
 
-4. **Run on device/emulator:**
-   - Press `i` for iOS Simulator
-   - Press `a` for Android Emulator
-   - Scan QR code with **Expo Go** app for physical device
-
-**Note:** See `EXPO_SDK52_SETUP.md` for detailed SDK 52 setup instructions.
+4. **Run on device:**
+   - Press `a` for Android emulator
+   - Press `i` for iOS simulator (Mac)
+   - Or scan QR code with Expo Go (development build recommended for full features)
 
 ---
 
-## 🎮 How to Play
+## 🏗️ Building for production
 
-1. **First Time Setup:**
-   - Enter child's name and age
-   - App creates a personalized profile
+### Android (EAS Build)
 
-2. **Choose a Game:**
-   - Browse 11 different games on the selection screen
-   - Each game shows current level and stars earned
+- **APK (e.g. sideload / internal):**
+  ```bash
+  npm run build:apk
+  # or
+  eas build --platform android --profile apk
+  ```
 
-3. **Play and Learn:**
-   - Complete challenges to earn points
-   - Progress through levels
-   - Unlock achievements and rewards
+- **AAB (Google Play):**
+  ```bash
+  npm run build:aab
+  # or
+  eas build --platform android --profile aab
+  ```
 
-4. **Parent Monitoring:**
-   - Access Parent Dashboard from home screen
-   - View detailed progress reports
-   - Track playtime and learning metrics
+- **Production (store):**
+  ```bash
+  npm run build:android
+  # or
+  eas build --platform android --profile production
+  ```
 
----
-
-## 🎯 Game Details
-
-### 👾 Math Monsters Arena
-- **Age:** 6-10
-- **Skills:** Addition, subtraction, multiplication, division
-- **Gameplay:** Battle monsters by solving math problems quickly
-- **Progression:** Difficulty increases with each level
-
-### 📚 Story Builder Kids
-- **Age:** 5-9
-- **Skills:** Grammar, sentence structure, creativity
-- **Gameplay:** Drag and drop words to create grammatically correct stories
-- **Progression:** More complex sentence structures unlock
-
-### 🌍 World Explorer
-- **Age:** 6-10
-- **Skills:** Geography, cultures, capitals
-- **Gameplay:** Explore interactive world map, complete country quizzes
-- **Progression:** Collect stamps from each country visited
-
-### 🎨 Art Detective
-- **Age:** 5-8
-- **Skills:** Pattern recognition, visual discrimination
-- **Gameplay:** Find matching shapes and colors
-- **Progression:** More shapes and complex patterns
-
-### 🧪 Science Tap Lab
-- **Age:** 7-10
-- **Skills:** Scientific thinking, cause and effect
-- **Gameplay:** Mix ingredients to create reactions
-- **Progression:** More complex experiments unlock
-
-### 🍕 Chef Fractions
-- **Age:** 6-10
-- **Skills:** Fractions, measurements
-- **Gameplay:** Select correct fraction of food items
-- **Progression:** More complex fractions and denominators
-
-### 🚀 Code Blocks Junior
-- **Age:** 7-10
-- **Skills:** Coding logic, sequencing
-- **Gameplay:** Use visual blocks (MOVE, TURN, LOOP) to guide robot
-- **Progression:** More complex puzzles and blocks
-
-### 🌱 Eco Guardians
-- **Age:** 5-10
-- **Skills:** Environmental awareness, responsibility
-- **Gameplay:** Complete missions like cleaning oceans, planting trees
-- **Progression:** More missions and bigger impact
-
-### 🎵 Music Rhythm Tiles
-- **Age:** 5-8
-- **Skills:** Rhythm, timing, coordination
-- **Gameplay:** Tap tiles in rhythm as they light up
-- **Progression:** Faster tempo and more tiles
-
-### 🧩 Logic Town Builder
-- **Age:** 6-10
-- **Skills:** Logic, planning, spatial reasoning
-- **Gameplay:** Build stable structures using logic rules
-- **Progression:** Larger grids and more buildings
-
-### 🍎 Fruit Finder
-- **Age:** 5-8
-- **Skills:** Vocabulary, word recognition, spelling
-- **Gameplay:** Identify fruits by typing their names
-- **Progression:** More fruits and harder names
-
----
-
-## 🔒 Safety & Privacy
-
-- ✅ **No Internet Required** - 100% offline functionality
-- ✅ **No Ads** - Completely ad-free experience
-- ✅ **No Tracking** - Zero data collection or tracking
-- ✅ **No Chat** - No communication with strangers
-- ✅ **COPPA Compliant** - Designed with child privacy in mind
-- ✅ **Parent Controls** - Dashboard for monitoring and limits
-
----
-
-## 🏗️ Building for Production
-
-### Android APK
+### iOS
 ```bash
-expo build:android
+npm run build:ios
+# or
+eas build --platform ios --profile production
 ```
 
-### iOS App
-```bash
-expo build:ios
-```
-
-### Using EAS Build (Recommended)
-```bash
-npm install -g eas-cli
-eas build --platform android
-eas build --platform ios
-```
+Requires an Apple Developer account and EAS configured for iOS.
 
 ---
 
-## 🧪 Testing
+## 🎮 How to play
 
-All games include:
-- Progress saving/loading
-- Score tracking
-- Level progression
-- Achievement system
-- Error handling
-
-Test each game by:
-1. Playing through multiple levels
-2. Checking progress persistence
-3. Verifying parent dashboard updates
-4. Testing offline functionality
+1. **First launch:** Enter child’s name and age (3–12).
+2. **Home:** Tap “Play Games” to see all 15 games, or “Parent Dashboard” for settings.
+3. **Difficulty:** In Parent Dashboard, set **Easy**, **Normal**, or **Hard**; all games use this (e.g. fewer/more correct needed, simpler/harder content).
+4. **Game sounds:** Toggle in Parent Dashboard; when on, a playful ringtone plays in games. Animal Sound Match always plays its sounds.
+5. **Progress:** Levels, scores, and playtime are saved locally and shown in Parent Dashboard; you can export a report or reset progress.
 
 ---
 
-## 📱 Supported Platforms
+## 🔒 Safety & privacy
 
-- ✅ iOS (iPhone & iPad)
-- ✅ Android (Phone & Tablet)
-- ⚠️ Web (limited game engine support)
-
----
-
-## 🤝 Contributing
-
-This is an educational project. Suggestions for improvements:
-- Additional game types
-- More levels for existing games
-- Accessibility features
-- Multiple language support
-- Sound effects and music
+- ✅ No internet required
+- ✅ No ads
+- ✅ No tracking or analytics
+- ✅ No chat or external links in gameplay
+- ✅ Parent controls: difficulty, screen time, sounds, reset
+- ✅ All data stays on device (SQLite)
 
 ---
 
-## 📄 License
+## 📱 Supported platforms
 
-This project is created for educational purposes.
-
----
-
-## 🙏 Acknowledgments
-
-- Built with React Native and Expo
-- Game concepts designed for early childhood education
-- Inspired by evidence-based learning methodologies
-- No internet required - perfect for limited connectivity areas
+- ✅ **Android** (phone & tablet) – APK and AAB
+- ✅ **iOS** (iPhone & iPad) – via EAS
+- ⚠️ Web – limited (Expo web); best experience on native
 
 ---
 
-## 📧 Support
+## 📄 License & credits
 
-For issues or questions:
-1. Check that all dependencies are installed
-2. Verify Node.js and Expo versions
-3. Test on different devices/simulators
-4. Review console logs for errors
+- For educational use.
+- **Developed by Russel Gallibot.**
 
 ---
 
-## 🎉 Have Fun Learning!
-
-**EduPlay Offline** makes learning fun, safe, and accessible for all children. No internet, no ads, no worries—just pure educational entertainment!
-
----
-
-**Built with ❤️ for young learners everywhere**
-
+**EduPlay Offline** – 15 learning games, no internet, no ads. Have fun learning.

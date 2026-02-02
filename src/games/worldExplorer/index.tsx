@@ -11,7 +11,15 @@ import {
 import { shuffle } from '../../utils/math';
 import { playSoundEffect, startBackgroundMusic, stopBackgroundMusic, playWinMusic, playLoseMusic } from '../../utils/sound';
 import { getGameProgress, updateGameProgress } from '../../database/db';
+import { getDifficulty } from '../../utils/difficulty';
 import { RewardModal } from '../../components/RewardModal';
+import { GameGuide } from '../../components/GameGuide';
+
+interface QuizItem {
+  question: string;
+  options: string[];
+  answer: string;
+}
 
 interface Country {
   code: string;
@@ -19,11 +27,7 @@ interface Country {
   flag: string;
   fact: string;
   capital: string;
-  quiz: {
-    question: string;
-    options: string[];
-    answer: string;
-  };
+  quizzes: QuizItem[];
 }
 
 const countries: Country[] = [
@@ -33,11 +37,12 @@ const countries: Country[] = [
     flag: '🇵🇭',
     fact: 'Has over 7,641 islands!',
     capital: 'Manila',
-    quiz: {
-      question: 'What is the capital of Philippines?',
-      options: ['Manila', 'Cebu', 'Davao', 'Baguio'],
-      answer: 'Manila',
-    },
+    quizzes: [
+      { question: 'What is the capital of Philippines?', options: ['Manila', 'Cebu', 'Davao', 'Baguio'], answer: 'Manila' },
+      { question: 'How many islands does Philippines have?', options: ['Over 7,000', 'About 100', 'About 50', 'Over 10,000'], answer: 'Over 7,000' },
+      { question: 'Which sea is west of the Philippines?', options: ['South China Sea', 'Atlantic Ocean', 'Mediterranean', 'Baltic Sea'], answer: 'South China Sea' },
+      { question: 'What fruit is the Philippines known for?', options: ['Mango', 'Apple', 'Banana only', 'Grapes'], answer: 'Mango' },
+    ],
   },
   {
     code: 'us',
@@ -45,11 +50,12 @@ const countries: Country[] = [
     flag: '🇺🇸',
     fact: 'Home to the Grand Canyon!',
     capital: 'Washington D.C.',
-    quiz: {
-      question: 'What is famous in Arizona, USA?',
-      options: ['Grand Canyon', 'Eiffel Tower', 'Big Ben', 'Taj Mahal'],
-      answer: 'Grand Canyon',
-    },
+    quizzes: [
+      { question: 'What big canyon is in the USA?', options: ['Grand Canyon', 'Eiffel Tower', 'Big Ben', 'Taj Mahal'], answer: 'Grand Canyon' },
+      { question: 'Where is the Grand Canyon?', options: ['Arizona', 'France', 'Japan', 'Egypt'], answer: 'Arizona' },
+      { question: 'What is the capital of the United States?', options: ['Washington D.C.', 'New York', 'Los Angeles', 'Chicago'], answer: 'Washington D.C.' },
+      { question: 'How many states does the USA have?', options: ['50', '48', '52', '45'], answer: '50' },
+    ],
   },
   {
     code: 'jp',
@@ -57,11 +63,12 @@ const countries: Country[] = [
     flag: '🇯🇵',
     fact: 'Land of the rising sun!',
     capital: 'Tokyo',
-    quiz: {
-      question: 'What is Japan called?',
-      options: ['Land of Rising Sun', 'Land of Dragons', 'Land of Ice', 'Land of Eagles'],
-      answer: 'Land of Rising Sun',
-    },
+    quizzes: [
+      { question: 'What is Japan sometimes called?', options: ['Land of Rising Sun', 'Land of Dragons', 'Land of Ice', 'Land of Eagles'], answer: 'Land of Rising Sun' },
+      { question: 'What is the capital of Japan?', options: ['Tokyo', 'Osaka', 'Kyoto', 'Hiroshima'], answer: 'Tokyo' },
+      { question: 'What is a famous Japanese mountain?', options: ['Mount Fuji', 'Mount Everest', 'K2', 'Kilimanjaro'], answer: 'Mount Fuji' },
+      { question: 'What do many Japanese people eat with chopsticks?', options: ['Rice', 'Pizza only', 'Bread only', 'Soup only'], answer: 'Rice' },
+    ],
   },
   {
     code: 'fr',
@@ -69,11 +76,12 @@ const countries: Country[] = [
     flag: '🇫🇷',
     fact: 'Famous for the Eiffel Tower!',
     capital: 'Paris',
-    quiz: {
-      question: 'What famous landmark is in France?',
-      options: ['Eiffel Tower', 'Big Ben', 'Colosseum', 'Statue of Liberty'],
-      answer: 'Eiffel Tower',
-    },
+    quizzes: [
+      { question: 'What tall tower is in France?', options: ['Eiffel Tower', 'Big Ben', 'Colosseum', 'Statue of Liberty'], answer: 'Eiffel Tower' },
+      { question: 'What is the capital of France?', options: ['Paris', 'Lyon', 'Nice', 'Marseille'], answer: 'Paris' },
+      { question: 'What language do people speak in France?', options: ['French', 'Spanish', 'German', 'Italian'], answer: 'French' },
+      { question: 'What famous art museum is in Paris?', options: ['The Louvre', 'The Met', 'British Museum', 'Uffizi'], answer: 'The Louvre' },
+    ],
   },
   {
     code: 'eg',
@@ -81,21 +89,24 @@ const countries: Country[] = [
     flag: '🇪🇬',
     fact: 'Home to the ancient Pyramids!',
     capital: 'Cairo',
-    quiz: {
-      question: 'What ancient structure is in Egypt?',
-      options: ['Pyramids', 'Great Wall', 'Taj Mahal', 'Colosseum'],
-      answer: 'Pyramids',
-    },
+    quizzes: [
+      { question: 'What big triangles are in Egypt?', options: ['Pyramids', 'Great Wall', 'Taj Mahal', 'Colosseum'], answer: 'Pyramids' },
+      { question: 'What is the capital of Egypt?', options: ['Cairo', 'Alexandria', 'Luxor', 'Aswan'], answer: 'Cairo' },
+      { question: 'What river flows through Egypt?', options: ['Nile', 'Amazon', 'Mississippi', 'Thames'], answer: 'Nile' },
+      { question: 'What is the Great Sphinx?', options: ['A statue with a lion body', 'A pyramid', 'A temple', 'A river'], answer: 'A statue with a lion body' },
+    ],
   },
 ];
 
 const WorldExplorerGame: React.FC = () => {
   const [visitedCountries, setVisitedCountries] = useState<string[]>([]);
   const [currentCountry, setCurrentCountry] = useState<Country | null>(null);
+  const [currentQuiz, setCurrentQuiz] = useState<QuizItem | null>(null);
   const [showQuiz, setShowQuiz] = useState(false);
   const [score, setScore] = useState(0);
   const [level, setLevel] = useState(1);
   const [showReward, setShowReward] = useState(false);
+  const [showGuide, setShowGuide] = useState(true);
 
   useEffect(() => {
     loadProgress();
@@ -116,18 +127,26 @@ const WorldExplorerGame: React.FC = () => {
 
   const visitCountry = (country: Country) => {
     setCurrentCountry(country);
+    setCurrentQuiz(null);
     setShowQuiz(false);
     playSoundEffect('click');
   };
 
   const startQuiz = () => {
+    if (!currentCountry) return;
+    const quizzes = currentCountry.quizzes;
+    const diff = getDifficulty();
+    const maxQuizzes = diff === 'easy' ? 2 : quizzes.length;
+    const quizIndex = (level - 1) % Math.min(maxQuizzes, quizzes.length);
+    const quiz = quizzes[quizIndex];
+    setCurrentQuiz(quiz);
     setShowQuiz(true);
   };
 
   const handleQuizAnswer = async (answer: string) => {
-    if (!currentCountry) return;
+    if (!currentCountry || !currentQuiz) return;
 
-    if (answer === currentCountry.quiz.answer) {
+    if (answer === currentQuiz.answer) {
       playSoundEffect('correct');
       const newScore = score + 20;
       setScore(newScore);
@@ -137,7 +156,7 @@ const WorldExplorerGame: React.FC = () => {
         setVisitedCountries(newVisited);
 
         if (newVisited.length === countries.length) {
-          await playWinMusic(); // Play victory music
+          await playWinMusic();
           const newLevel = level + 1;
           await updateGameProgress('world', {
             level: newLevel,
@@ -153,15 +172,16 @@ const WorldExplorerGame: React.FC = () => {
         }
       }
 
-      Alert.alert('Correct! 🎉', `You earned a stamp from ${currentCountry.name}!`);
+      setTimeout(() => {
+        setCurrentCountry(null);
+        setCurrentQuiz(null);
+        setShowQuiz(false);
+      }, 1200);
     } else {
-      await playLoseMusic(); // Play failure music
+      await playLoseMusic();
       playSoundEffect('wrong');
       Alert.alert('Not quite!', 'Try another country!');
     }
-
-    setCurrentCountry(null);
-    setShowQuiz(false);
   };
 
   return (
@@ -170,6 +190,7 @@ const WorldExplorerGame: React.FC = () => {
         <Text style={styles.headerText}>
           Level {level} | Score: {score} | Stamps: {visitedCountries.length}/{countries.length}
         </Text>
+        <Text style={styles.headerSubtext}>Tap a country → Answer the question → Get a stamp! Visit all to level up.</Text>
       </View>
 
       <ScrollView style={styles.scrollView}>
@@ -217,10 +238,10 @@ const WorldExplorerGame: React.FC = () => {
                   <Text style={styles.backButtonText}>← Back to Map</Text>
                 </TouchableOpacity>
               </View>
-            ) : (
+            ) : currentQuiz ? (
               <View style={styles.quizContainer}>
-                <Text style={styles.quizQuestion}>{currentCountry.quiz.question}</Text>
-                {currentCountry.quiz.options.map((option) => (
+                <Text style={styles.quizQuestion}>{currentQuiz.question}</Text>
+                {shuffle([...currentQuiz.options]).map((option) => (
                   <TouchableOpacity
                     key={option}
                     style={styles.quizOption}
@@ -230,7 +251,7 @@ const WorldExplorerGame: React.FC = () => {
                   </TouchableOpacity>
                 ))}
               </View>
-            )}
+            ) : null}
           </View>
         )}
       </ScrollView>
@@ -240,6 +261,25 @@ const WorldExplorerGame: React.FC = () => {
         rewardName="World Explorer!"
         rewardIcon="🌍"
         onClose={() => setShowReward(false)}
+      />
+
+      <GameGuide
+        visible={showGuide}
+        onClose={() => setShowGuide(false)}
+        title="World Explorer"
+        icon="🌍"
+        steps={[
+          { emoji: '🗺️', text: 'Tap a country to visit it' },
+          { emoji: '📖', text: 'Read the fun fact about that country' },
+          { emoji: '❓', text: 'Tap "Take Quiz" to answer a question' },
+          { emoji: '✅', text: 'Get the answer right to earn a stamp!' },
+          { emoji: '🎯', text: 'Visit all countries and pass their quizzes to level up' },
+        ]}
+        tips={[
+          'Questions change each time – try again if you miss!',
+          'Read the fact first – the answer is often there.',
+          'Have fun learning about the world!',
+        ]}
       />
     </SafeAreaView>
   );
@@ -253,11 +293,18 @@ const styles = StyleSheet.create({
   header: {
     backgroundColor: '#2196F3',
     padding: 15,
+    alignItems: 'center',
   },
   headerText: {
     color: '#fff',
     fontSize: 14,
     fontWeight: 'bold',
+    textAlign: 'center',
+  },
+  headerSubtext: {
+    color: 'rgba(255,255,255,0.9)',
+    fontSize: 12,
+    marginTop: 4,
     textAlign: 'center',
   },
   scrollView: {

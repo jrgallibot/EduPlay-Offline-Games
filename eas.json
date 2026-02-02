@@ -1,12 +1,15 @@
 {
   "cli": {
     "version": ">= 5.0.0",
-    "appVersionSource": "remote"
+    "appVersionSource": "local"
   },
   "build": {
     "development": {
       "developmentClient": true,
-      "distribution": "internal"
+      "distribution": "internal",
+      "android": {
+        "buildType": "apk"
+      }
     },
     "preview": {
       "distribution": "internal",
@@ -14,9 +17,31 @@
         "buildType": "apk"
       }
     },
+    "apk": {
+      "distribution": "internal",
+      "android": {
+        "buildType": "apk"
+      },
+      "env": {
+        "EXPO_PUBLIC_ANDROID_TARGET_SDK_VERSION": "35"
+      }
+    },
     "production": {
+      "distribution": "store",
       "android": {
         "buildType": "app-bundle"
+      },
+      "env": {
+        "EXPO_PUBLIC_ANDROID_TARGET_SDK_VERSION": "35"
+      }
+    },
+    "aab": {
+      "distribution": "store",
+      "android": {
+        "buildType": "app-bundle"
+      },
+      "env": {
+        "EXPO_PUBLIC_ANDROID_TARGET_SDK_VERSION": "35"
       }
     }
   },

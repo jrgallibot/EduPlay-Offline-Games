@@ -12,8 +12,9 @@ import {
 } from 'react-native';
 import { ProgressBar } from '../components/ProgressBar';
 import { useUserStore } from '../store/userStore';
-import { getAllProgress, updateGameProgress, executeSQL } from '../database/db';
+import { getAllProgress, updateGameProgress, executeSQL, getSetting } from '../database/db';
 import { GameProgress } from '../store/progressStore';
+import { setMusicEnabled, getSoundEnabled } from '../utils/sound';
 
 const ParentDashboard: React.FC = () => {
   const { user } = useUserStore();
@@ -24,9 +25,14 @@ const ParentDashboard: React.FC = () => {
   const [showDifficultyModal, setShowDifficultyModal] = useState(false);
   const [screenTimeLimit, setScreenTimeLimit] = useState(60); // minutes
   const [difficulty, setDifficulty] = useState('normal');
+  const [soundOn, setSoundOn] = useState(true);
 
   useEffect(() => {
     loadData();
+    const saved = getSetting('sound_enabled');
+    setSoundOn(saved !== '0');
+    const diff = getSetting('difficulty');
+    if (diff === 'easy' || diff === 'normal' || diff === 'hard') setDifficulty(diff);
   }, []);
 
   const loadData = async () => {
@@ -119,7 +125,7 @@ Generated: ${new Date().toLocaleString()}
 Player: ${user?.name || 'Unknown'}
 Total Score: ${totalScore}
 Total Playtime: ${formatPlaytime(totalPlaytime)}
-Games Completed: ${progressData.filter((g) => g.completed).length}/10
+Games Completed: ${progressData.filter((g) => g.completed).length}/15
 
 Game Progress:
 ${progressData.map((game) => 
@@ -141,6 +147,11 @@ ${progressData.map((game) =>
     eco: 'Eco Guardians',
     music: 'Music Rhythm',
     logic: 'Logic Town',
+    fruit: 'Fruit Finder',
+    colorMatch: 'Color Match Parade',
+    letterPop: 'Letter Pop Balloons',
+    numberHop: 'Number Hop',
+    animalSound: 'Animal Sound Match',
   };
 
   return (
@@ -167,7 +178,7 @@ ${progressData.map((game) =>
           </View>
           <View style={styles.statBox}>
             <Text style={styles.statValue}>
-              {progressData.filter((g) => g.completed).length}/10
+              {progressData.filter((g) => g.completed).length}/15
             </Text>
             <Text style={styles.statLabel}>Completed</Text>
           </View>
@@ -215,6 +226,17 @@ ${progressData.map((game) =>
           >
             <Text style={styles.settingText}>🎯 Adjust Difficulty</Text>
             <Text style={styles.settingSubtext}>Current: {difficulty}</Text>
+          </TouchableOpacity>
+          <TouchableOpacity 
+            style={styles.settingButton}
+            onPress={() => {
+              const next = !soundOn;
+              setSoundOn(next);
+              setMusicEnabled(next);
+            }}
+          >
+            <Text style={styles.settingText}>🔊 Game Sounds</Text>
+            <Text style={styles.settingSubtext}>{soundOn ? 'On – playful ringtone in games' : 'Off'} – tap to toggle</Text>
           </TouchableOpacity>
           <TouchableOpacity 
             style={styles.settingButton}

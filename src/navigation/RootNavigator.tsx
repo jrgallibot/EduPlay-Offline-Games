@@ -14,6 +14,10 @@ import EcoGuardiansGame from '../games/ecoGuardians';
 import MusicRhythmGame from '../games/musicRhythm';
 import LogicTownGame from '../games/logicTown';
 import FruitFinderGame from '../games/fruitFinder';
+import ColorMatchParadeGame from '../games/colorMatchParade';
+import LetterPopBalloonsGame from '../games/letterPopBalloons';
+import NumberHopGame from '../games/numberHop';
+import AnimalSoundMatchGame from '../games/animalSoundMatch';
 
 export type RootStackParamList = {
   Home: undefined;
@@ -30,6 +34,10 @@ export type RootStackParamList = {
   MusicRhythm: undefined;
   LogicTown: undefined;
   FruitFinder: undefined;
+  ColorMatchParade: undefined;
+  LetterPopBalloons: undefined;
+  NumberHop: undefined;
+  AnimalSoundMatch: undefined;
 };
 
 const Stack = createStackNavigator<RootStackParamList>();
@@ -96,7 +104,7 @@ const RootNavigator = () => {
       <Stack.Screen
         name="CodeBlocks"
         component={CodeBlocksGame}
-        options={{ title: 'Code Blocks Junior' }}
+        options={{ title: 'Code Blocks' }}
       />
       <Stack.Screen
         name="EcoGuardians"
@@ -117,6 +125,26 @@ const RootNavigator = () => {
         name="FruitFinder"
         component={FruitFinderGame}
         options={{ title: 'Fruit Finder' }}
+      />
+      <Stack.Screen
+        name="ColorMatchParade"
+        component={ColorMatchParadeGame}
+        options={{ title: 'Color Match Parade' }}
+      />
+      <Stack.Screen
+        name="LetterPopBalloons"
+        component={LetterPopBalloonsGame}
+        options={{ title: 'Letter Pop Balloons' }}
+      />
+      <Stack.Screen
+        name="NumberHop"
+        component={NumberHopGame}
+        options={{ title: 'Number Hop' }}
+      />
+      <Stack.Screen
+        name="AnimalSoundMatch"
+        component={AnimalSoundMatchGame}
+        options={{ title: 'Animal Sound Match' }}
       />
     </Stack.Navigator>
   );

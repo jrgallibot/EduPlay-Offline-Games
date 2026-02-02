@@ -9,6 +9,7 @@ import {
 } from 'react-native';
 import { playSoundEffect, startBackgroundMusic, stopBackgroundMusic, playWinMusic, playLoseMusic } from '../../utils/sound';
 import { getGameProgress, updateGameProgress } from '../../database/db';
+import { getDifficulty } from '../../utils/difficulty';
 import { RewardModal } from '../../components/RewardModal';
 
 interface Experiment {
@@ -115,7 +116,8 @@ const ScienceLabGame: React.FC = () => {
         const newCompleted = [...completedExperiments, currentExperiment.name];
         setCompletedExperiments(newCompleted);
 
-        if (newCompleted.length === experiments.length) {
+        const needed = getDifficulty() === 'easy' ? 3 : experiments.length;
+        if (newCompleted.length >= needed) {
           await playWinMusic(); // Play victory music
           const newLevel = level + 1;
           await updateGameProgress('science', {

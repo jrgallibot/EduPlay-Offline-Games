@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   View,
   Text,
@@ -10,7 +10,9 @@ import {
 import { random } from '../../utils/math';
 import { playSoundEffect, startBackgroundMusic, stopBackgroundMusic, playWinMusic } from '../../utils/sound';
 import { getGameProgress, updateGameProgress } from '../../database/db';
+import { getDifficulty, scaleLevel } from '../../utils/difficulty';
 import { RewardModal } from '../../components/RewardModal';
+import { GameGuide } from '../../components/GameGuide';
 
 const ArtDetectiveGame: React.FC = () => {
   const [level, setLevel] = useState(1);
@@ -18,7 +20,10 @@ const ArtDetectiveGame: React.FC = () => {
   const [shapes, setShapes] = useState<string[]>([]);
   const [targetShape, setTargetShape] = useState('');
   const [foundCount, setFoundCount] = useState(0);
+  const [totalToFind, setTotalToFind] = useState(0);
   const [showReward, setShowReward] = useState(false);
+  const [showGuide, setShowGuide] = useState(true);
+  const scoreRef = useRef(0);
 
   const shapeEmojis = ['🔴', '🔵', '🟢', '🟡', '🟣', '🟠', '⭐', '💎', '🔷', '🔶'];
 
@@ -37,13 +42,15 @@ const ArtDetectiveGame: React.FC = () => {
     if (progress) {
       setLevel(progress.level);
       setScore(progress.score);
+      scoreRef.current = progress.score;
     }
   };
 
   const generateLevel = () => {
+    const effLevel = scaleLevel(level, getDifficulty());
     const newShapes: string[] = [];
     const target = shapeEmojis[random(0, shapeEmojis.length - 1)];
-    const targetCount = 3 + level;
+    const targetCount = 3 + effLevel;
 
     // Add target shapes
     for (let i = 0; i < targetCount; i++) {
@@ -51,7 +58,7 @@ const ArtDetectiveGame: React.FC = () => {
     }
 
     // Add other shapes
-    const gridSize = 16 + level * 4;
+    const gridSize = 16 + effLevel * 4;
     for (let i = targetCount; i < gridSize; i++) {
       let randomShape;
       do {
@@ -69,39 +76,44 @@ const ArtDetectiveGame: React.FC = () => {
     setShapes(newShapes);
     setTargetShape(target);
     setFoundCount(0);
+    setTotalToFind(targetCount);
   };
 
   const handleShapePress = async (shape: string, index: number) => {
-    if (shape === targetShape) {
-      playSoundEffect('correct');
-      const newShapes = [...shapes];
-      newShapes[index] = '✓';
-      setShapes(newShapes);
-      
-      const newFoundCount = foundCount + 1;
-      setFoundCount(newFoundCount);
-      const newScore = score + 10;
-      setScore(newScore);
-
-      const totalTarget = shapes.filter(s => s === targetShape).length;
-      if (newFoundCount === totalTarget) {
-        await playWinMusic(); // Play victory music
-        const newLevel = level + 1;
-        await updateGameProgress('art', {
-          level: newLevel,
-          score: newScore,
-          stars: Math.min(3, level),
-        });
-        setShowReward(true);
-        setTimeout(() => {
-          setShowReward(false);
-          setLevel(newLevel);
-          generateLevel();
-        }, 2000);
-      }
-    } else {
+    if (shape !== targetShape) {
       playSoundEffect('wrong');
       Alert.alert('Oops!', 'That\'s not the right shape. Try again!');
+      return;
+    }
+    if (shape === '✓') return; // already found
+
+    playSoundEffect('correct');
+    const newShapes = [...shapes];
+    newShapes[index] = '✓';
+    const remaining = newShapes.filter(s => s === targetShape).length;
+
+    setShapes(newShapes);
+    setFoundCount((prev) => prev + 1);
+    scoreRef.current += 10;
+    setScore(scoreRef.current);
+
+    if (remaining === 0) {
+      await playWinMusic();
+      const newLevel = level + 1;
+      const newScore = scoreRef.current;
+      await updateGameProgress('art', {
+        level: newLevel,
+        score: newScore,
+        stars: Math.min(3, level),
+      });
+      setShowReward(true);
+      setTimeout(() => {
+        setShowReward(false);
+        setLevel(newLevel);
+        scoreRef.current = newScore;
+        setScore(newScore);
+        generateLevel();
+      }, 2000);
     }
   };
 
@@ -114,11 +126,12 @@ const ArtDetectiveGame: React.FC = () => {
       </View>
 
       <View style={styles.instructionBox}>
-        <Text style={styles.instructionText}>Find all the:</Text>
+        <Text style={styles.instructionText}>Find and tap every:</Text>
         <Text style={styles.targetShape}>{targetShape}</Text>
         <Text style={styles.progressText}>
-          Found: {foundCount} / {shapes.filter(s => s === targetShape).length}
+          Found: {foundCount} / {totalToFind}
         </Text>
+        <Text style={styles.hintText}>Tap each one. When all are found, you advance!</Text>
       </View>
 
       <View style={styles.grid}>
@@ -138,6 +151,18 @@ const ArtDetectiveGame: React.FC = () => {
         rewardName="Art Detective Master!"
         rewardIcon="🎨"
         onClose={() => setShowReward(false)}
+      />
+      <GameGuide
+        visible={showGuide}
+        onClose={() => setShowGuide(false)}
+        title="Art Detective"
+        icon="🎨"
+        steps={[
+          { emoji: '🎯', text: 'Look at the shape at the top – that is the one to find.' },
+          { emoji: '👆', text: 'Tap every tile that shows that same shape. Skip the others!' },
+          { emoji: '✅', text: 'When you tap all of them, you level up. Each level has more shapes to find.' },
+        ]}
+        tips={['Wrong shape? No problem – just tap the right one next.', 'Level 1 = 3 to find, then more each level.']}
       />
     </SafeAreaView>
   );
@@ -178,6 +203,12 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: 'bold',
     color: '#4CAF50',
+  },
+  hintText: {
+    fontSize: 14,
+    color: '#666',
+    marginTop: 8,
+    fontStyle: 'italic',
   },
   grid: {
     flexDirection: 'row',

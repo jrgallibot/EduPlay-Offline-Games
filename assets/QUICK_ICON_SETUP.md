@@ -1,5 +1,15 @@
 # Creating App Icons - Quick Start
 
+**Current setup:** The app uses `assets/logo.png` for:
+- **App icon** (home screen / APK icon)
+- **Android adaptive icon** (foreground)
+- **Web favicon**
+- **In-app logo** (Home screen and Welcome setup)
+
+Replace or update `assets/logo.png` to change the branding everywhere. For best results on Android, use a square PNG (e.g. 1024×1024) with transparency; the adaptive icon will use the green background from `app.json`.
+
+---
+
 ## Option 1: Use Online Generator (Easiest)
 
 1. Go to: https://www.appicon.co/

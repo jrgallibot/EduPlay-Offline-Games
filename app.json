@@ -2,12 +2,13 @@
   "expo": {
     "name": "EduPlay Offline",
     "slug": "eduplay-offline",
-    "version": "1.0.0",
-    "sdkVersion": "52.0.0",
+    "scheme": "eduplay-offline",
+    "version": "1.0.3",
+    "sdkVersion": "54.0.0",
     "orientation": "portrait",
     "userInterfaceStyle": "light",
     "newArchEnabled": true,
-    "icon": "./assets/icon.png",
+    "icon": "./assets/logo.png",
     "splash": {
       "image": "./assets/splash.png",
       "resizeMode": "contain",
@@ -19,26 +20,43 @@
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.eduplay.offline",
-      "icon": "./assets/icon.png"
+      "icon": "./assets/logo.png"
     },
     "android": {
       "adaptiveIcon": {
-        "foregroundImage": "./assets/adaptive-icon.png",
+        "foregroundImage": "./assets/logo.png",
         "backgroundColor": "#4CAF50"
       },
       "package": "com.eduplay.offline",
-      "permissions": []
+      "permissions": [],
+      "blockedPermissions": [
+        "android.permission.RECORD_AUDIO"
+      ],
+      "versionCode": 4
     },
     "web": {
-      "favicon": "./assets/favicon.png"
+      "favicon": "./assets/logo.png"
     },
     "plugins": [
-      "expo-sqlite"
+      "expo-sqlite",
+      [
+        "expo-build-properties",
+        {
+          "android": {
+            "compileSdkVersion": 35,
+            "targetSdkVersion": 35,
+            "buildToolsVersion": "35.0.0",
+            "enableMinifyInReleaseBuilds": true
+          }
+        }
+      ],
+      "expo-asset"
     ],
     "extra": {
       "eas": {
-        "projectId": "418304eb-2024-486f-9b77-8670ab4c18b4"
+        "projectId": "bdf32784-bfd4-42a7-8083-6762275f7d6b"
       }
-    }
+    },
+    "owner": "dswddevopscursor"
   }
 }

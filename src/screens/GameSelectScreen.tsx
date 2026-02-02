@@ -27,6 +27,10 @@ const games = [
   { key: 'music', title: 'Music Rhythm', icon: '🎵', screen: 'MusicRhythm' },
   { key: 'logic', title: 'Logic Town', icon: '🧩', screen: 'LogicTown' },
   { key: 'fruit', title: 'Fruit Finder', icon: '🍎', screen: 'FruitFinder' },
+  { key: 'colorMatch', title: 'Color Match Parade', icon: '🌈', screen: 'ColorMatchParade' },
+  { key: 'letterPop', title: 'Letter Pop Balloons', icon: '🎈', screen: 'LetterPopBalloons' },
+  { key: 'numberHop', title: 'Number Hop', icon: '🐸', screen: 'NumberHop' },
+  { key: 'animalSound', title: 'Animal Sound Match', icon: '🐾', screen: 'AnimalSoundMatch' },
 ];
 
 const GameSelectScreen: React.FC<Props> = ({ navigation }) => {
@@ -44,10 +48,18 @@ const GameSelectScreen: React.FC<Props> = ({ navigation }) => {
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
-        <Text style={styles.headerTitle}>Choose Your Adventure!</Text>
-        <Text style={styles.headerSubtitle}>Pick a game to start learning</Text>
+        <Text style={styles.headerEmoji}>🎮</Text>
+        <Text style={styles.headerTitle}>Choose Your Game!</Text>
+        <Text style={styles.headerSubtitle}>Tap any game to play • {games.length} fun games</Text>
+        <View style={styles.badge}>
+          <Text style={styles.badgeText}>{games.length} Games</Text>
+        </View>
       </View>
-      <ScrollView contentContainerStyle={styles.scrollContent}>
+      <ScrollView
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
+      >
+        <Text style={styles.sectionLabel}>All games</Text>
         <View style={styles.gamesGrid}>
           {games.map((game) => {
             const gameProgress = progress[game.key] || {
@@ -76,31 +88,65 @@ const GameSelectScreen: React.FC<Props> = ({ navigation }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F5F5F5',
+    backgroundColor: '#E8F5E9',
   },
   header: {
-    padding: 20,
-    backgroundColor: '#4CAF50',
+    paddingVertical: 20,
+    paddingHorizontal: 16,
+    backgroundColor: '#2E7D32',
+    borderBottomLeftRadius: 24,
+    borderBottomRightRadius: 24,
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.15,
+    shadowRadius: 8,
+    elevation: 6,
+  },
+  headerEmoji: {
+    fontSize: 40,
+    marginBottom: 4,
   },
   headerTitle: {
-    fontSize: 24,
+    fontSize: 26,
     fontWeight: 'bold',
     color: '#fff',
     textAlign: 'center',
   },
   headerSubtitle: {
-    fontSize: 14,
-    color: '#fff',
+    fontSize: 15,
+    color: '#C8E6C9',
     textAlign: 'center',
-    marginTop: 5,
+    marginTop: 6,
+  },
+  badge: {
+    marginTop: 12,
+    backgroundColor: '#FFF',
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 20,
+  },
+  badgeText: {
+    fontSize: 14,
+    fontWeight: 'bold',
+    color: '#2E7D32',
   },
   scrollContent: {
-    paddingVertical: 10,
+    paddingVertical: 20,
+    paddingHorizontal: 12,
+    paddingBottom: 32,
+  },
+  sectionLabel: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#1B5E20',
+    marginBottom: 14,
+    marginLeft: 4,
   },
   gamesGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    justifyContent: 'space-around',
+    justifyContent: 'space-between',
   },
 });
 

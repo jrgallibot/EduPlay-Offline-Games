@@ -1,7 +1,11 @@
 import * as Haptics from 'expo-haptics';
 import { Audio } from 'expo-av';
 import * as Speech from 'expo-speech';
+import * as FileSystem from 'expo-file-system/legacy';
 import { getNoteFrequency } from './tonePlayer';
+import { getWavBase64 } from './wavTone';
+import { animalSoundAssets } from './animalSoundAssets';
+import { getSetting, setSetting } from '../database/db';
 
 // Audio objects for background music and sound effects
 let backgroundMusic: Audio.Sound | null = null;
@@ -10,7 +14,20 @@ let loseSound: Audio.Sound | null = null;
 let isMusicEnabled = true;
 let musicPlaying = false;
 
-// Initialize audio mode
+// Load sound setting from storage (call after DB init)
+export const loadSoundSetting = () => {
+  try {
+    const saved = getSetting('sound_enabled');
+    isMusicEnabled = saved !== '0';
+  } catch {
+    isMusicEnabled = true;
+  }
+};
+
+// Check if sound is enabled (for games to respect settings)
+export const getSoundEnabled = (): boolean => isMusicEnabled;
+
+// Initialize audio mode so game sounds play (iOS silent mode, Android duck others)
 export const initializeAudio = async () => {
   try {
     await Audio.setAudioModeAsync({
@@ -18,51 +35,42 @@ export const initializeAudio = async () => {
       staysActiveInBackground: false,
       shouldDuckAndroid: true,
       allowsRecordingIOS: false,
+      interruptionModeIOS: 1,
+      interruptionModeAndroid: 1,
+      playThroughEarpieceAndroid: false,
     });
   } catch (error) {
     console.log('Audio initialization error:', error);
   }
 };
 
-// Play a musical note using haptics and audio feedback (works offline in APK)
-const playNote = async (note: string, octave: number, duration: number = 200) => {
+// Play a musical note: audible tone via speech (vowel at pitch) + haptic. Set forcePlay true to play even when sound is off (e.g. animal sounds).
+const playNote = async (note: string, octave: number, duration: number = 200, syllable: string = 'e', forcePlay?: boolean) => {
+  if (!forcePlay && !isMusicEnabled) return;
   try {
     const frequency = getNoteFrequency(note, octave);
-    
-    // Haptic feedback based on frequency (always works)
-    const hapticType = frequency > 500 
-      ? Haptics.ImpactFeedbackStyle.Light 
-      : frequency > 300 
-      ? Haptics.ImpactFeedbackStyle.Medium 
-      : Haptics.ImpactFeedbackStyle.Heavy;
-    
-    await Haptics.impactAsync(hapticType);
-    
-    // Create audio beep using speech synthesis with pitch control
-    // This creates actual sound that works in APK builds
+    const pitch = Math.max(0.6, Math.min(2.0, 1.0 + (frequency - 440) / 2200));
+
+    const stopAt = Math.min(duration, 220);
     try {
-      const pitch = Math.max(0.5, Math.min(2.0, 1.0 + (frequency - 440) / 2200));
-      
-      // Use a space character with very fast rate to create a beep-like sound
-      await Speech.speak(' ', {
-        pitch: pitch,
-        rate: 0.001, // Extremely fast to create beep
+      await Speech.speak(syllable, {
+        pitch,
+        rate: syllable === 'la' ? 1.4 : 2.2,
+        volume: 1.0,
         language: 'en',
       });
-      
-      // Auto-stop after duration
       setTimeout(async () => {
         try {
           await Speech.stop();
         } catch (e) {}
-      }, Math.min(duration, 500));
+      }, stopAt);
     } catch (speechError) {
-      // If speech fails, haptics still work
-      console.log('Speech audio unavailable, using haptics only');
+      // fallback: haptic only
     }
-    
+    try {
+      await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    } catch (e) {}
   } catch (error) {
-    // Fallback to haptics only
     try {
       await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     } catch (e) {}
@@ -90,10 +98,10 @@ const createMelody = async (frequencies: number[], duration: number = 200): Prom
   return null as any; // Placeholder
 };
 
-// Background music - intense, energetic loop
+// EduPlay ringtone – playful melody when Game Sounds is ON (recognizable tune, "la" singing)
 let musicInterval: NodeJS.Timeout | null = null;
 let lastFailureTime = 0;
-const FAILURE_MUSIC_COOLDOWN = 3000; // 3 seconds cooldown between failure music
+const FAILURE_MUSIC_COOLDOWN = 3000;
 
 export const startBackgroundMusic = async () => {
   try {
@@ -103,38 +111,46 @@ export const startBackgroundMusic = async () => {
     await initializeAudio();
     musicPlaying = true;
 
-    // Background music melody - happy, energetic loop
-    const backgroundNotes = [
-      { note: 'C', octave: 4, duration: 300 },
-      { note: 'E', octave: 4, duration: 300 },
-      { note: 'G', octave: 4, duration: 300 },
-      { note: 'C', octave: 5, duration: 600 },
+    // Playful ringtone: "Twinkle Twinkle" first phrase – clear, recognizable tune when sounds ON
+    const ringtoneMelody = [
+      { note: 'C', octave: 4, duration: 380 },
+      { note: 'C', octave: 4, duration: 380 },
+      { note: 'G', octave: 4, duration: 380 },
+      { note: 'G', octave: 4, duration: 380 },
+      { note: 'A', octave: 4, duration: 380 },
+      { note: 'A', octave: 4, duration: 380 },
+      { note: 'G', octave: 4, duration: 420 },
+      { note: 'F', octave: 4, duration: 380 },
+      { note: 'F', octave: 4, duration: 380 },
+      { note: 'E', octave: 4, duration: 380 },
+      { note: 'E', octave: 4, duration: 380 },
+      { note: 'D', octave: 4, duration: 380 },
+      { note: 'D', octave: 4, duration: 380 },
+      { note: 'C', octave: 4, duration: 500 },
     ];
+
+    const PAUSE_BETWEEN_LOOPS = 1200;
 
     const playMusicLoop = async () => {
       if (!isMusicEnabled || !musicPlaying) return;
       
       try {
-        // Play background melody
-        for (const note of backgroundNotes) {
+        for (const n of ringtoneMelody) {
           if (!isMusicEnabled || !musicPlaying) break;
-          await playNote(note.note, note.octave, note.duration);
-          await new Promise(resolve => setTimeout(resolve, 50));
+          await playNote(n.note, n.octave, n.duration, 'la');
+          await new Promise(resolve => setTimeout(resolve, 60));
         }
         
-        // Continue loop if music is still enabled
         if (isMusicEnabled && musicPlaying) {
-          setTimeout(() => playMusicLoop(), 500);
+          setTimeout(() => playMusicLoop(), PAUSE_BETWEEN_LOOPS);
         }
       } catch (error) {
-        // If error, retry after delay
         if (isMusicEnabled && musicPlaying) {
           setTimeout(() => playMusicLoop(), 1000);
         }
       }
     };
 
-    // Start the music loop
     playMusicLoop();
     
   } catch (error) {
@@ -164,125 +180,167 @@ export const stopBackgroundMusic = async () => {
   }
 };
 
-// Victory music - triumphant, celebratory
+// Victory music - playful, celebratory (EduPlay style)
 export const playWinMusic = async () => {
   try {
     await stopBackgroundMusic();
-    
     if (winSound) {
       await winSound.unloadAsync();
     }
-
-    // Victory melody - triumphant ascending notes
+    if (!isMusicEnabled) return;
     const victoryNotes = [
-      { note: 'C', octave: 5, duration: 200 },
-      { note: 'E', octave: 5, duration: 200 },
-      { note: 'G', octave: 5, duration: 200 },
-      { note: 'C', octave: 6, duration: 400 },
+      { note: 'C', octave: 5, duration: 220 },
+      { note: 'E', octave: 5, duration: 220 },
+      { note: 'G', octave: 5, duration: 220 },
+      { note: 'C', octave: 6, duration: 500 },
+      { note: 'G', octave: 5, duration: 180 },
+      { note: 'C', octave: 6, duration: 450 },
     ];
-
-    // Play victory sequence with haptics and audio
-    await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-    
     for (const note of victoryNotes) {
       await playNote(note.note, note.octave, note.duration);
-      await new Promise(resolve => setTimeout(resolve, 50));
+      await new Promise(resolve => setTimeout(resolve, 45));
     }
-    
-    await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
-    
-    // Restart background music after 2 seconds
-    setTimeout(() => {
-      startBackgroundMusic();
-    }, 2000);
+    setTimeout(() => startBackgroundMusic(), 2200);
   } catch (error) {
     console.log('Error playing win music:', error);
   }
 };
 
-// Failure music - somber, encouraging (with cooldown)
+// Failure music - gentle, encouraging (with cooldown)
 export const playLoseMusic = async () => {
   try {
     const now = Date.now();
-    // Prevent failure music from playing too frequently
-    if (now - lastFailureTime < FAILURE_MUSIC_COOLDOWN) {
-      // Just play haptic feedback, don't restart music
-      await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
-      return;
-    }
-    
+    if (now - lastFailureTime < FAILURE_MUSIC_COOLDOWN) return;
     lastFailureTime = now;
     await stopBackgroundMusic();
-    
-    if (loseSound) {
-      await loseSound.unloadAsync();
-    }
-
-    // Failure melody - gentle, encouraging descending notes
+    if (loseSound) await loseSound.unloadAsync();
+    if (!isMusicEnabled) return;
     const failureNotes = [
       { note: 'C', octave: 4, duration: 250 },
       { note: 'A', octave: 3, duration: 250 },
       { note: 'F', octave: 3, duration: 400 },
     ];
-
-    // Play failure sequence with haptics and audio
-    await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
-    
     for (const note of failureNotes) {
       await playNote(note.note, note.octave, note.duration);
       await new Promise(resolve => setTimeout(resolve, 50));
     }
-    
-    // Restart background music after 1.5 seconds
-    setTimeout(() => {
-      startBackgroundMusic();
-    }, 1500);
+    setTimeout(() => startBackgroundMusic(), 1500);
   } catch (error) {
     console.log('Error playing lose music:', error);
   }
 };
 
-// Sound effects with actual audio tones
+// Animal sounds = pure sine-wave tone patterns (no Speech, no human/AI voice). Each animal has a distinct pitch pattern.
+const ANIMAL_TONES: Record<string, { note: string; octave: number; duration: number }[]> = {
+  cow: [
+    { note: 'G', octave: 2, duration: 450 },
+    { note: 'C', octave: 2, duration: 500 },
+  ],
+  dog: [
+    { note: 'C', octave: 3, duration: 120 },
+    { note: 'C', octave: 3, duration: 140 },
+  ],
+  cat: [
+    { note: 'E', octave: 4, duration: 160 },
+    { note: 'G', octave: 4, duration: 160 },
+    { note: 'A', octave: 4, duration: 280 },
+  ],
+  pig: [
+    { note: 'G', octave: 2, duration: 220 },
+    { note: 'C', octave: 3, duration: 200 },
+  ],
+  chicken: [
+    { note: 'A', octave: 4, duration: 100 },
+    { note: 'G', octave: 4, duration: 100 },
+  ],
+  sheep: [
+    { note: 'E', octave: 3, duration: 500 },
+  ],
+  duck: [
+    { note: 'A', octave: 5, duration: 120 },
+    { note: 'A', octave: 5, duration: 120 },
+  ],
+  frog: [
+    { note: 'C', octave: 3, duration: 140 },
+    { note: 'G', octave: 4, duration: 120 },
+    { note: 'C', octave: 3, duration: 160 },
+  ],
+};
+
+/** Play real animal recording if available, otherwise pure-tone fallback. Always plays so the game is playable. */
+export const playAnimalSound = async (animalKey: string) => {
+  const key = animalKey.toLowerCase();
+  await Speech.stop();
+
+  const asset = animalSoundAssets[key];
+  if (asset != null) {
+    try {
+      const { sound } = await Audio.Sound.createAsync(asset);
+      await sound.playAsync();
+      await new Promise((r) => setTimeout(r, 2500));
+      await sound.unloadAsync();
+      return;
+    } catch (e) {
+      // fall through to tone fallback
+    }
+  }
+
+  const sequence = ANIMAL_TONES[key];
+  if (!sequence || !FileSystem.cacheDirectory) return;
+  try {
+    for (let i = 0; i < sequence.length; i++) {
+      const { note, octave, duration } = sequence[i];
+      const frequency = getNoteFrequency(note, octave);
+      const base64 = getWavBase64(frequency, duration, 0.3);
+      const uri = `${FileSystem.cacheDirectory}animal_tone_${Date.now()}_${i}.wav`;
+      await FileSystem.writeAsStringAsync(uri, base64, {
+        encoding: FileSystem.EncodingType.Base64,
+      });
+      const { sound } = await Audio.Sound.createAsync({ uri });
+      await sound.playAsync();
+      await new Promise((r) => setTimeout(r, duration + 80));
+      await sound.unloadAsync();
+      if (i < sequence.length - 1) {
+        await new Promise((r) => setTimeout(r, 80));
+      }
+    }
+  } catch (e) {
+    // ignore
+  }
+};
+
+// Sound effects: real game tones (when sound on) + haptic
 export const playSoundEffect = async (type: 'correct' | 'wrong' | 'win' | 'click') => {
+  if (!isMusicEnabled) return;
   try {
     switch (type) {
       case 'correct':
-        await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-        // Play positive beep
-        await playNote('E', 5, 100);
-        await playNote('G', 5, 100);
+        await playNote('E', 5, 120);
+        await playNote('G', 5, 120);
         break;
       case 'wrong':
-        await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
-        // Play negative beep
-        await playNote('C', 3, 150);
-        // Don't call playLoseMusic here to avoid recursion
+        await playNote('C', 3, 180);
         break;
       case 'win':
-        // Don't call playWinMusic here - it's called separately
-        await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-        await playNote('C', 6, 200);
+        await playNote('C', 6, 220);
         break;
       case 'click':
-        await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-        await playNote('C', 5, 50);
+        await playNote('C', 5, 80);
         break;
       default:
-        await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-        await playNote('C', 4, 50);
+        await playNote('C', 4, 80);
     }
   } catch (error) {
-    console.log(`Sound effect error: ${type}`, error);
-    // Fallback to haptics only
     try {
-      await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+      await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     } catch (e) {}
   }
 };
 
-// Toggle music on/off
+// Toggle sound on/off (saved to DB, used for music + effects)
 export const setMusicEnabled = (enabled: boolean) => {
   isMusicEnabled = enabled;
+  setSetting('sound_enabled', enabled ? '1' : '0');
   if (!enabled) {
     stopBackgroundMusic();
   } else {

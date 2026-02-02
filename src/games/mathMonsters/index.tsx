@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   View,
   Text,
@@ -10,6 +10,7 @@ import {
 import { generateMathQuestion, calculateStars } from '../../utils/math';
 import { playSoundEffect, startBackgroundMusic, stopBackgroundMusic, playWinMusic, playLoseMusic } from '../../utils/sound';
 import { getGameProgress, updateGameProgress } from '../../database/db';
+import { getDifficulty } from '../../utils/difficulty';
 import { ProgressBar } from '../../components/ProgressBar';
 import { RewardModal } from '../../components/RewardModal';
 import { GameGuide } from '../../components/GameGuide';
@@ -24,13 +25,26 @@ const MathMonstersGame: React.FC = () => {
   const [showReward, setShowReward] = useState(false);
   const [questionCount, setQuestionCount] = useState(0);
   const [showGuide, setShowGuide] = useState(true);
+  const [isAnswering, setIsAnswering] = useState(false);
+  const progressLoadedRef = useRef(false);
+  const levelCompleteRef = useRef(false);
 
   useEffect(() => {
-    loadProgress();
-    startBackgroundMusic(); // Start intense background music
-    
+    let cancelled = false;
+    (async () => {
+      const progress = await getGameProgress('math');
+      if (cancelled || progressLoadedRef.current || levelCompleteRef.current) return;
+      if (progress) {
+        setLevel(progress.level);
+        setScore(progress.score);
+        setQuestion(generateMathQuestion(progress.level, getDifficulty()));
+      }
+      progressLoadedRef.current = true;
+    })();
+    startBackgroundMusic();
     return () => {
-      stopBackgroundMusic(); // Stop music when leaving game
+      cancelled = true;
+      stopBackgroundMusic();
     };
   }, []);
 
@@ -43,53 +57,47 @@ const MathMonstersGame: React.FC = () => {
     }
   }, [monsterHealth, playerHealth]);
 
-  const loadProgress = async () => {
-    const progress = await getGameProgress('math');
-    if (progress) {
-      setLevel(progress.level);
-      setScore(progress.score);
-      setQuestion(generateMathQuestion(progress.level));
-    }
-  };
-
   const handleAnswer = (selectedAnswer: number) => {
-    setQuestionCount(questionCount + 1);
+    if (isAnswering) return;
+    setIsAnswering(true);
 
-    if (selectedAnswer === question.answer) {
-      // Correct answer
+    const correct = selectedAnswer === question.answer;
+    if (correct) {
       playSoundEffect('correct');
-      const damage = 20 + streak * 5;
-      setMonsterHealth(Math.max(0, monsterHealth - damage));
-      setScore(score + 10 + streak * 2);
-      setStreak(streak + 1);
+      setQuestionCount((c) => c + 1);
+      setMonsterHealth((h) => Math.max(0, h - (20 + streak * 5)));
+      setScore((s) => s + 10 + streak * 2);
+      setStreak((k) => k + 1);
     } else {
-      // Wrong answer
       playSoundEffect('wrong');
-      setPlayerHealth(Math.max(0, playerHealth - 15));
+      setPlayerHealth((h) => Math.max(0, h - 15));
       setStreak(0);
     }
 
-    // Generate new question
-    setQuestion(generateMathQuestion(level));
+    setQuestion(generateMathQuestion(level, getDifficulty()));
+    setTimeout(() => setIsAnswering(false), 400);
   };
 
   const handleLevelComplete = async () => {
-    await playWinMusic(); // Play victory music
-    const stars = calculateStars(score, questionCount * 10);
+    if (levelCompleteRef.current) return;
+    levelCompleteRef.current = true;
+
+    await playWinMusic();
+    const stars = calculateStars(score, Math.max(1, questionCount) * 10);
     const newLevel = level + 1;
-    const currentScore = score; // Use current score state
 
     await updateGameProgress('math', {
       level: newLevel,
-      score: currentScore,
+      score: score,
       stars: stars,
     });
 
+    setLevel(newLevel);
     setShowReward(true);
     setTimeout(() => {
       setShowReward(false);
-      setLevel(newLevel);
       resetLevel();
+      levelCompleteRef.current = false;
     }, 3000);
   };
 
@@ -113,7 +121,7 @@ const MathMonstersGame: React.FC = () => {
     setStreak(0);
     setQuestionCount(0);
     // Don't reset score - keep accumulated score
-    setQuestion(generateMathQuestion(level));
+    setQuestion(generateMathQuestion(level, getDifficulty()));
   };
 
   return (
@@ -161,8 +169,9 @@ const MathMonstersGame: React.FC = () => {
         {question.options.map((option, index) => (
           <TouchableOpacity
             key={index}
-            style={styles.optionButton}
+            style={[styles.optionButton, isAnswering && styles.optionButtonDisabled]}
             onPress={() => handleAnswer(option)}
+            disabled={isAnswering}
           >
             <Text style={styles.optionText}>{option}</Text>
           </TouchableOpacity>
@@ -296,6 +305,9 @@ const styles = StyleSheet.create({
     borderRadius: 15,
     marginVertical: 10,
     alignItems: 'center',
+  },
+  optionButtonDisabled: {
+    opacity: 0.6,
   },
   optionText: {
     color: '#fff',

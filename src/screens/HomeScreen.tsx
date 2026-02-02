@@ -6,7 +6,13 @@ import {
   StyleSheet,
   TextInput,
   Alert,
+  SafeAreaView,
+  ScrollView,
+  Image,
 } from 'react-native';
+
+// App logo for header and setup screens
+const APP_LOGO = require('../../assets/logo.png');
 import { StackNavigationProp } from '@react-navigation/stack';
 import { RootStackParamList } from '../navigation/RootNavigator';
 import { useUserStore } from '../store/userStore';
@@ -39,15 +45,15 @@ const HomeScreen: React.FC<Props> = ({ navigation }) => {
 
   const handleCreateUser = async () => {
     if (!name.trim()) {
-      Alert.alert('Error', 'Please enter your name');
+      Alert.alert('Oops!', 'Please enter your name');
       return;
     }
-    if (!age || parseInt(age) < 3 || parseInt(age) > 12) {
-      Alert.alert('Error', 'Please enter age between 3 and 12');
+    if (!age || parseInt(age, 10) < 3 || parseInt(age, 10) > 12) {
+      Alert.alert('Oops!', 'Please enter age between 3 and 12');
       return;
     }
 
-    await createUser(name, parseInt(age));
+    await createUser(name.trim(), parseInt(age, 10));
     const newUser = await getUser();
     setUser(newUser);
     setShowSetup(false);
@@ -55,132 +61,253 @@ const HomeScreen: React.FC<Props> = ({ navigation }) => {
 
   if (showSetup) {
     return (
-      <View style={styles.container}>
-        <Text style={styles.title}>🎮 Welcome to EduPlay! 🎮</Text>
-        <Text style={styles.subtitle}>Let's get to know you!</Text>
-
-        <View style={styles.setupForm}>
-          <Text style={styles.label}>What's your name?</Text>
-          <TextInput
-            style={styles.input}
-            value={name}
-            onChangeText={setName}
-            placeholder="Enter your name"
-            placeholderTextColor="#999"
-          />
-
-          <Text style={styles.label}>How old are you?</Text>
-          <TextInput
-            style={styles.input}
-            value={age}
-            onChangeText={setAge}
-            placeholder="Enter your age"
-            placeholderTextColor="#999"
-            keyboardType="number-pad"
-            maxLength={2}
-          />
-
-          <TouchableOpacity style={styles.button} onPress={handleCreateUser}>
-            <Text style={styles.buttonText}>Let's Play! 🚀</Text>
-          </TouchableOpacity>
+      <SafeAreaView style={styles.containerSetup}>
+        <View style={styles.setupHeader}>
+          <View style={styles.setupLogoCircle}>
+            <Image source={APP_LOGO} style={styles.setupLogoImage} resizeMode="cover" />
+          </View>
+          <Text style={styles.setupHeaderTitle}>Welcome to EduPlay!</Text>
+          <Text style={styles.setupHeaderSubtitle}>Let's get to know you</Text>
         </View>
-      </View>
+        <ScrollView
+          contentContainerStyle={styles.setupScroll}
+          keyboardShouldPersistTaps="handled"
+        >
+          <View style={styles.setupForm}>
+            <Text style={styles.label}>What's your name?</Text>
+            <TextInput
+              style={styles.input}
+              value={name}
+              onChangeText={setName}
+              placeholder="Type your name"
+              placeholderTextColor="#999"
+              autoCapitalize="words"
+            />
+            <Text style={styles.label}>How old are you?</Text>
+            <TextInput
+              style={styles.input}
+              value={age}
+              onChangeText={setAge}
+              placeholder="3 to 12"
+              placeholderTextColor="#999"
+              keyboardType="number-pad"
+              maxLength={2}
+            />
+            <TouchableOpacity
+              style={styles.button}
+              onPress={handleCreateUser}
+              activeOpacity={0.85}
+            >
+              <Text style={styles.buttonText}>Let's Play! 🚀</Text>
+            </TouchableOpacity>
+          </View>
+        </ScrollView>
+      </SafeAreaView>
     );
   }
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>🎮 EduPlay Offline 🎮</Text>
-      <Text style={styles.tagline}>
-        11 Learning Games. One Safe App. No Internet Needed.
-      </Text>
+    <SafeAreaView style={styles.container}>
+      <View style={styles.header}>
+        <View style={styles.headerLogoCircle}>
+          <Image source={APP_LOGO} style={styles.headerLogoImage} resizeMode="cover" />
+        </View>
+        <Text style={styles.headerTitle}>EduPlay Offline</Text>
+        <Text style={styles.headerTagline}>
+          15 Learning Games • No Internet Needed
+        </Text>
+        <View style={styles.badge}>
+          <Text style={styles.badgeText}>15 Games</Text>
+        </View>
+      </View>
 
-      {user && (
-        <Text style={styles.welcome}>Welcome back, {user.name}! 👋</Text>
-      )}
-
-      <TouchableOpacity
-        style={styles.playButton}
-        onPress={() => navigation.navigate('GameSelect')}
-      >
-        <Text style={styles.playButtonText}>🎯 Play Games</Text>
-      </TouchableOpacity>
-
-      <TouchableOpacity
-        style={styles.parentButton}
-        onPress={() => navigation.navigate('ParentDashboard')}
-      >
-        <Text style={styles.parentButtonText}>👨‍👩‍👧 Parent Dashboard</Text>
-      </TouchableOpacity>
+      <View style={styles.content}>
+        {user && (
+          <Text style={styles.welcome}>Hi, {user.name}! 👋</Text>
+        )}
+        <TouchableOpacity
+          style={styles.playButton}
+          onPress={() => navigation.navigate('GameSelect')}
+          activeOpacity={0.85}
+        >
+          <Text style={styles.playButtonText}>🎯 Play Games</Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={styles.parentButton}
+          onPress={() => navigation.navigate('ParentDashboard')}
+          activeOpacity={0.85}
+        >
+          <Text style={styles.parentButtonText}>👨‍👩‍👧 Parent Dashboard</Text>
+        </TouchableOpacity>
+      </View>
 
       <View style={styles.footer}>
-        <Text style={styles.footerText}>✔ No Internet</Text>
-        <Text style={styles.footerText}>✔ No Ads</Text>
-        <Text style={styles.footerText}>✔ 100% Safe</Text>
+        <View style={styles.footerRow}>
+          <Text style={styles.footerText}>✔ No Internet</Text>
+          <Text style={styles.footerText}>✔ No Ads</Text>
+          <Text style={styles.footerText}>✔ 100% Safe</Text>
+        </View>
+        <View style={styles.footerCredit}>
+          <Text style={styles.footerCreditLabel}>Developed by</Text>
+          <Text style={styles.footerCreditName}>Russel Gallibot</Text>
+        </View>
       </View>
-    </View>
+    </SafeAreaView>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F5F5F5',
+    backgroundColor: '#E8F5E9',
+  },
+  containerSetup: {
+    flex: 1,
+    backgroundColor: '#E8F5E9',
+  },
+  setupHeader: {
+    backgroundColor: '#2E7D32',
+    paddingTop: 48,
+    paddingBottom: 28,
+    paddingHorizontal: 20,
+    borderBottomLeftRadius: 24,
+    borderBottomRightRadius: 24,
     alignItems: 'center',
-    justifyContent: 'center',
-    padding: 20,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.12,
+    shadowRadius: 8,
+    elevation: 6,
   },
-  title: {
-    fontSize: 32,
+  setupLogoCircle: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    overflow: 'hidden',
+    marginTop: 8,
+    marginBottom: 12,
+    backgroundColor: 'transparent',
+  },
+  setupLogoImage: {
+    width: '100%',
+    height: '100%',
+  },
+  setupHeaderTitle: {
+    fontSize: 26,
     fontWeight: 'bold',
-    color: '#4CAF50',
-    marginBottom: 10,
+    color: '#fff',
     textAlign: 'center',
   },
-  tagline: {
+  setupHeaderSubtitle: {
     fontSize: 16,
-    color: '#666',
+    color: '#C8E6C9',
     textAlign: 'center',
-    marginBottom: 30,
+    marginTop: 6,
   },
-  subtitle: {
-    fontSize: 20,
-    color: '#666',
-    marginBottom: 30,
-    textAlign: 'center',
-  },
-  welcome: {
-    fontSize: 20,
-    color: '#333',
-    marginBottom: 40,
+  setupScroll: {
+    flexGrow: 1,
+    padding: 24,
+    paddingTop: 28,
   },
   setupForm: {
     width: '100%',
-    marginTop: 20,
+  },
+  header: {
+    backgroundColor: '#2E7D32',
+    paddingTop: 44,
+    paddingBottom: 24,
+    paddingHorizontal: 20,
+    borderBottomLeftRadius: 24,
+    borderBottomRightRadius: 24,
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.12,
+    shadowRadius: 8,
+    elevation: 6,
+  },
+  headerLogoCircle: {
+    width: 72,
+    height: 72,
+    borderRadius: 36,
+    overflow: 'hidden',
+    marginTop: 8,
+    marginBottom: 8,
+    backgroundColor: 'transparent',
+  },
+  headerLogoImage: {
+    width: '100%',
+    height: '100%',
+  },
+  headerTitle: {
+    fontSize: 28,
+    fontWeight: 'bold',
+    color: '#fff',
+    textAlign: 'center',
+  },
+  headerTagline: {
+    fontSize: 15,
+    color: '#C8E6C9',
+    textAlign: 'center',
+    marginTop: 8,
+  },
+  badge: {
+    marginTop: 14,
+    backgroundColor: '#fff',
+    paddingHorizontal: 18,
+    paddingVertical: 8,
+    borderRadius: 20,
+  },
+  badgeText: {
+    fontSize: 14,
+    fontWeight: 'bold',
+    color: '#2E7D32',
+  },
+  content: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 24,
+  },
+  welcome: {
+    fontSize: 22,
+    fontWeight: '600',
+    color: '#1B5E20',
+    marginBottom: 32,
   },
   label: {
     fontSize: 18,
-    color: '#333',
+    fontWeight: '600',
+    color: '#1B5E20',
     marginBottom: 10,
-    marginTop: 15,
+    marginTop: 18,
   },
   input: {
     width: '100%',
-    height: 50,
+    height: 52,
     backgroundColor: '#fff',
-    borderRadius: 10,
-    paddingHorizontal: 15,
-    fontSize: 16,
-    borderWidth: 2,
-    borderColor: '#E0E0E0',
+    borderRadius: 16,
+    paddingHorizontal: 18,
+    fontSize: 17,
+    borderWidth: 3,
+    borderColor: '#A5D6A7',
   },
   playButton: {
-    backgroundColor: '#4CAF50',
-    paddingHorizontal: 50,
+    backgroundColor: '#2E7D32',
     paddingVertical: 20,
-    borderRadius: 30,
-    marginBottom: 20,
-    width: '80%',
+    paddingHorizontal: 40,
+    borderRadius: 28,
+    marginBottom: 18,
+    width: '100%',
+    maxWidth: 320,
+    alignItems: 'center',
+    borderWidth: 3,
+    borderColor: '#1B5E20',
+    shadowColor: '#2E7D32',
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.2,
+    shadowRadius: 6,
+    elevation: 4,
   },
   playButtonText: {
     color: '#fff',
@@ -189,11 +316,15 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   parentButton: {
-    backgroundColor: '#2196F3',
-    paddingHorizontal: 30,
-    paddingVertical: 15,
-    borderRadius: 25,
-    width: '80%',
+    backgroundColor: '#1976D2',
+    paddingVertical: 16,
+    paddingHorizontal: 32,
+    borderRadius: 24,
+    width: '100%',
+    maxWidth: 320,
+    alignItems: 'center',
+    borderWidth: 2,
+    borderColor: '#0D47A1',
   },
   parentButtonText: {
     color: '#fff',
@@ -202,28 +333,59 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   button: {
-    backgroundColor: '#4CAF50',
+    backgroundColor: '#2E7D32',
+    paddingVertical: 18,
     paddingHorizontal: 40,
-    paddingVertical: 15,
-    borderRadius: 25,
-    marginTop: 30,
+    borderRadius: 28,
+    marginTop: 28,
+    width: '100%',
+    alignItems: 'center',
+    borderWidth: 3,
+    borderColor: '#1B5E20',
   },
   buttonText: {
     color: '#fff',
-    fontSize: 18,
+    fontSize: 20,
     fontWeight: 'bold',
     textAlign: 'center',
   },
   footer: {
-    position: 'absolute',
-    bottom: 30,
+    paddingVertical: 18,
+    paddingHorizontal: 16,
+    backgroundColor: '#C8E6C9',
+    borderTopWidth: 2,
+    borderTopColor: '#A5D6A7',
+    alignItems: 'center',
+  },
+  footerRow: {
     flexDirection: 'row',
     justifyContent: 'space-around',
     width: '100%',
+    marginBottom: 14,
   },
   footerText: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: '#2E7D32',
+  },
+  footerCredit: {
+    alignItems: 'center',
+    paddingTop: 12,
+    borderTopWidth: 1,
+    borderTopColor: 'rgba(46, 125, 50, 0.35)',
+    width: '100%',
+  },
+  footerCreditLabel: {
     fontSize: 12,
-    color: '#999',
+    color: '#2E7D32',
+    opacity: 0.9,
+    marginBottom: 2,
+  },
+  footerCreditName: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: '#1B5E20',
+    letterSpacing: 0.5,
   },
 });
 

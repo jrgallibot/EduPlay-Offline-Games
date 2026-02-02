@@ -43,6 +43,11 @@ INSERT OR IGNORE INTO game_progress (game_key, level, score) VALUES
   ('code', 1, 0),
   ('eco', 1, 0),
   ('music', 1, 0),
-  ('logic', 1, 0);
+  ('logic', 1, 0),
+  ('fruit', 1, 0),
+  ('colorMatch', 1, 0),
+  ('letterPop', 1, 0),
+  ('numberHop', 1, 0),
+  ('animalSound', 1, 0);
 `;
 

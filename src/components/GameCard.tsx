@@ -17,14 +17,18 @@ export const GameCard: React.FC<GameCardProps> = ({
   onPress,
 }) => {
   return (
-    <TouchableOpacity style={styles.card} onPress={onPress}>
+    <TouchableOpacity
+      style={styles.card}
+      onPress={onPress}
+      activeOpacity={0.8}
+    >
       <View style={styles.iconContainer}>
         <Text style={styles.icon}>{icon}</Text>
       </View>
-      <Text style={styles.title}>{title}</Text>
+      <Text style={styles.title} numberOfLines={2}>{title}</Text>
       <View style={styles.statsContainer}>
         <Text style={styles.stats}>Level {level}</Text>
-        <Text style={styles.stars}>{'⭐'.repeat(stars)}</Text>
+        <Text style={styles.stars}>{'⭐'.repeat(Math.min(stars, 3))}</Text>
       </View>
     </TouchableOpacity>
   );
@@ -32,48 +36,55 @@ export const GameCard: React.FC<GameCardProps> = ({
 
 const styles = StyleSheet.create({
   card: {
-    width: '45%',
+    width: '48%',
     backgroundColor: '#fff',
-    borderRadius: 20,
-    padding: 15,
-    margin: '2.5%',
+    borderRadius: 24,
+    padding: 16,
+    marginBottom: 14,
     alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
+    borderWidth: 3,
+    borderColor: '#C8E6C9',
+    shadowColor: '#2E7D32',
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.12,
     shadowRadius: 8,
-    elevation: 5,
+    elevation: 4,
   },
   iconContainer: {
-    width: 70,
-    height: 70,
-    borderRadius: 35,
-    backgroundColor: '#f0f0f0',
+    width: 76,
+    height: 76,
+    borderRadius: 38,
+    backgroundColor: '#E8F5E9',
     justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: 10,
+    marginBottom: 12,
+    borderWidth: 2,
+    borderColor: '#A5D6A7',
   },
   icon: {
-    fontSize: 40,
+    fontSize: 44,
   },
   title: {
     fontSize: 14,
     fontWeight: 'bold',
-    color: '#333',
+    color: '#1B5E20',
     textAlign: 'center',
     marginBottom: 8,
+    minHeight: 36,
   },
   statsContainer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     width: '100%',
+    alignItems: 'center',
   },
   stats: {
-    fontSize: 12,
-    color: '#666',
+    fontSize: 13,
+    color: '#388E3C',
+    fontWeight: '600',
   },
   stars: {
-    fontSize: 12,
+    fontSize: 14,
   },
 });
 

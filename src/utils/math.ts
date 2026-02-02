@@ -16,14 +16,19 @@ export const shuffle = <T>(array: T[]): T[] => {
   return newArray;
 };
 
+export type Difficulty = 'easy' | 'normal' | 'hard';
+
 export const generateMathQuestion = (
-  level: number = 1
+  level: number = 1,
+  difficulty: Difficulty = 'normal'
 ): { question: string; answer: number; options: number[] } => {
-  const maxNum = level * 10;
+  const effectiveLevel = difficulty === 'easy' ? Math.max(1, level - 1) : difficulty === 'hard' ? level + 1 : level;
+  const maxNum = Math.max(5, effectiveLevel * 10);
   const a = random(1, maxNum);
   const b = random(1, maxNum);
   const operations = ['+', '-', '*'];
-  const operation = operations[random(0, Math.min(level - 1, 2))];
+  const opIndex = difficulty === 'easy' ? 0 : difficulty === 'hard' ? Math.min(effectiveLevel, 2) : Math.min(level - 1, 2);
+  const operation = operations[Math.max(0, random(0, opIndex))];
 
   let answer: number;
   let question: string;
@@ -46,10 +51,10 @@ export const generateMathQuestion = (
       question = `${a} + ${b}`;
   }
 
-  // Generate wrong options
+  const spread = difficulty === 'easy' ? 3 : difficulty === 'hard' ? 8 : 5;
   const options = [answer];
   while (options.length < 4) {
-    const wrongAnswer = answer + random(-5, 5);
+    const wrongAnswer = answer + random(-spread, spread);
     if (wrongAnswer !== answer && !options.includes(wrongAnswer) && wrongAnswer >= 0) {
       options.push(wrongAnswer);
     }

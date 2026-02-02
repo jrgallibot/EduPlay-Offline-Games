@@ -10,6 +10,7 @@ import {
 } from 'react-native';
 import { playSoundEffect, startBackgroundMusic, stopBackgroundMusic, playWinMusic } from '../../utils/sound';
 import { getGameProgress, updateGameProgress } from '../../database/db';
+import { getDifficulty } from '../../utils/difficulty';
 import { RewardModal } from '../../components/RewardModal';
 
 interface Mission {
@@ -85,7 +86,9 @@ const EcoGuardiansGame: React.FC = () => {
     if (!currentMission) return;
 
     playSoundEffect('click');
-    const maxProgress = currentMission.id === 'trees' ? 5 : currentMission.id === 'animals' ? 3 : 10;
+    const diff = getDifficulty();
+    const base = currentMission.id === 'trees' ? 5 : currentMission.id === 'animals' ? 3 : 10;
+    const maxProgress = diff === 'easy' ? Math.max(2, base - 2) : diff === 'hard' ? base + 2 : base;
     const newProgress = missionProgress + 1;
     setMissionProgress(newProgress);
 
@@ -122,11 +125,7 @@ const EcoGuardiansGame: React.FC = () => {
       }
     }
 
-    Alert.alert(
-      '🎉 Mission Complete!',
-      `You earned ${currentMission.points} points!`,
-      [{ text: 'Continue', onPress: () => setCurrentMission(null) }]
-    );
+    setTimeout(() => setCurrentMission(null), 1500);
   };
 
   const getMissionActionText = () => {

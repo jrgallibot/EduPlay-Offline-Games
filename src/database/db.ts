@@ -99,3 +99,17 @@ export const unlockReward = async (rewardKey: string, rewardName: string) => {
 export const getRewards = async () => {
   return executeSQL('SELECT * FROM rewards WHERE unlocked = 1');
 };
+
+// Get a setting value
+export const getSetting = (key: string): string | null => {
+  const result = executeSQL('SELECT value FROM settings WHERE key = ?', [key]);
+  return result.length > 0 && result[0].value != null ? String(result[0].value) : null;
+};
+
+// Set a setting value
+export const setSetting = (key: string, value: string) => {
+  executeSQL(
+    'INSERT OR REPLACE INTO settings (key, value) VALUES (?, ?)',
+    [key, value]
+  );
+};

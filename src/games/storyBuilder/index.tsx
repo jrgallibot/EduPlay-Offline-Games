@@ -11,7 +11,9 @@ import {
 import { shuffle } from '../../utils/math';
 import { playSoundEffect, startBackgroundMusic, stopBackgroundMusic, playWinMusic } from '../../utils/sound';
 import { getGameProgress, updateGameProgress } from '../../database/db';
+import { getDifficulty } from '../../utils/difficulty';
 import { RewardModal } from '../../components/RewardModal';
+import { GameGuide } from '../../components/GameGuide';
 
 interface StoryParts {
   subjects: string[];
@@ -42,6 +44,7 @@ const StoryBuilderGame: React.FC = () => {
     objects: [],
     places: [],
   });
+  const [showGuide, setShowGuide] = useState(true);
 
   useEffect(() => {
     loadProgress();
@@ -83,7 +86,8 @@ const StoryBuilderGame: React.FC = () => {
     setScore(newScore);
     setStoriesCreated(newCount);
 
-    if (newCount % 3 === 0) {
+    const storiesNeeded = getDifficulty() === 'easy' ? 2 : getDifficulty() === 'hard' ? 4 : 3;
+    if (newCount % storiesNeeded === 0) {
       handleLevelComplete();
     } else {
       Alert.alert(
@@ -98,11 +102,11 @@ const StoryBuilderGame: React.FC = () => {
     await playWinMusic(); // Play victory music
     const newLevel = level + 1;
     const currentScore = score; // Use current score state
-    
+    const storiesNeeded = getDifficulty() === 'easy' ? 2 : getDifficulty() === 'hard' ? 4 : 3;
     await updateGameProgress('story', {
       level: newLevel,
       score: currentScore,
-      stars: Math.min(3, Math.floor(storiesCreated / 3)),
+      stars: Math.min(3, Math.floor(storiesCreated / storiesNeeded)),
     });
 
     setShowReward(true);
@@ -137,6 +141,8 @@ const StoryBuilderGame: React.FC = () => {
     </TouchableOpacity>
   );
 
+  const canCreate = Boolean(selectedSubject && selectedVerb && selectedObject && selectedPlace);
+
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
@@ -145,21 +151,33 @@ const StoryBuilderGame: React.FC = () => {
         </Text>
       </View>
 
-      <ScrollView style={styles.scrollView}>
+      <View style={styles.objectiveBox}>
+        <Text style={styles.objectiveTitle}>📖 Your goal</Text>
+        <Text style={styles.objectiveText}>
+          Pick <Text style={styles.objectiveBold}>one word from each section</Text> below (Who? What did they do? What? Where?), then tap <Text style={styles.objectiveBold}>Create Story!</Text> at the bottom.
+        </Text>
+      </View>
+
+      <ScrollView
+        style={styles.scrollView}
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={true}
+        keyboardShouldPersistTaps="handled"
+      >
         <View style={styles.storyDisplay}>
-          <Text style={styles.storyTitle}>Your Story:</Text>
+          <Text style={styles.storyTitle}>Your story so far:</Text>
           <View style={styles.storyContainer}>
             <Text style={styles.storyText}>
-              {selectedSubject || '[Subject]'}{' '}
-              {selectedVerb || '[Verb]'}{' '}
-              {selectedObject || '[Object]'}{' '}
-              {selectedPlace || '[Place]'}.
+              {selectedSubject || '[Who?]'}{' '}
+              {selectedVerb || '[Did what?]'}{' '}
+              {selectedObject || '[What?]'}{' '}
+              {selectedPlace || '[Where?]'}.
             </Text>
           </View>
         </View>
 
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>1️⃣ Choose Subject (Who?):</Text>
+          <Text style={styles.sectionTitle}>1️⃣ Who? (Subject)</Text>
           <View style={styles.wordsContainer}>
             {shuffledParts.subjects.map((word) =>
               renderWordButton(
@@ -172,7 +190,7 @@ const StoryBuilderGame: React.FC = () => {
         </View>
 
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>2️⃣ Choose Verb (Did what?):</Text>
+          <Text style={styles.sectionTitle}>2️⃣ Did what? (Verb)</Text>
           <View style={styles.wordsContainer}>
             {shuffledParts.verbs.map((word) =>
               renderWordButton(
@@ -185,7 +203,7 @@ const StoryBuilderGame: React.FC = () => {
         </View>
 
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>3️⃣ Choose Object (What?):</Text>
+          <Text style={styles.sectionTitle}>3️⃣ What? (Object)</Text>
           <View style={styles.wordsContainer}>
             {shuffledParts.objects.map((word) =>
               renderWordButton(
@@ -198,7 +216,7 @@ const StoryBuilderGame: React.FC = () => {
         </View>
 
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>4️⃣ Choose Place (Where?):</Text>
+          <Text style={styles.sectionTitle}>4️⃣ Where? (Place)</Text>
           <View style={styles.wordsContainer}>
             {shuffledParts.places.map((word) =>
               renderWordButton(
@@ -209,17 +227,49 @@ const StoryBuilderGame: React.FC = () => {
             )}
           </View>
         </View>
-
-        <TouchableOpacity style={styles.createButton} onPress={createStory}>
-          <Text style={styles.createButtonText}>📖 Create Story!</Text>
-        </TouchableOpacity>
       </ScrollView>
+
+      <View style={styles.footer}>
+        <TouchableOpacity
+          style={[styles.createButton, !canCreate && styles.createButtonDimmed]}
+          onPress={createStory}
+          activeOpacity={0.8}
+          accessible={true}
+          accessibilityRole="button"
+          accessibilityLabel="Create Story"
+        >
+          <Text style={styles.createButtonText}>📖 Create Story!</Text>
+          {!canCreate && (
+            <Text style={styles.createButtonHint}>Pick one word from each section above first</Text>
+          )}
+        </TouchableOpacity>
+      </View>
 
       <RewardModal
         visible={showReward}
         rewardName="Story Master!"
         rewardIcon="📚"
         onClose={() => setShowReward(false)}
+      />
+
+      <GameGuide
+        visible={showGuide}
+        onClose={() => setShowGuide(false)}
+        title="Story Builder"
+        icon="📖"
+        steps={[
+          { emoji: '🎯', text: 'Your goal: pick one word from each section (Who? Did what? What? Where?)' },
+          { emoji: '👤', text: 'Who? Tap one subject (knight, princess, dragon...)' },
+          { emoji: '🏃', text: 'Did what? Tap one verb (discovered, built, visited...)' },
+          { emoji: '🎁', text: 'What? Tap one object (magic wand, treasure, crown...)' },
+          { emoji: '📍', text: 'Where? Tap one place (castle, forest, moon...)' },
+          { emoji: '✅', text: 'Tap the green "Create Story!" button at the bottom to finish!' },
+        ]}
+        tips={[
+          'The Create Story button is always at the bottom of the screen.',
+          'Any choices are OK – there are no wrong answers!',
+          'Create 3 stories to level up. Have fun!',
+        ]}
       />
     </SafeAreaView>
   );
@@ -228,11 +278,11 @@ const StoryBuilderGame: React.FC = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#FFF8DC',
+    backgroundColor: '#F5F0E6',
   },
   header: {
-    backgroundColor: '#FF6B6B',
-    padding: 15,
+    backgroundColor: '#8B4513',
+    padding: 14,
   },
   headerText: {
     color: '#fff',
@@ -240,79 +290,128 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     textAlign: 'center',
   },
+  objectiveBox: {
+    backgroundColor: '#D2691E',
+    marginHorizontal: 16,
+    marginTop: 12,
+    marginBottom: 8,
+    padding: 16,
+    borderRadius: 12,
+    borderWidth: 2,
+    borderColor: '#A0522D',
+  },
+  objectiveTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#fff',
+    marginBottom: 8,
+  },
+  objectiveText: {
+    fontSize: 15,
+    color: '#fff',
+    lineHeight: 22,
+  },
+  objectiveBold: {
+    fontWeight: 'bold',
+    textDecorationLine: 'underline',
+  },
   scrollView: {
     flex: 1,
   },
+  scrollContent: {
+    paddingHorizontal: 16,
+    paddingBottom: 24,
+  },
   storyDisplay: {
-    padding: 20,
+    padding: 18,
     backgroundColor: '#fff',
-    margin: 15,
-    borderRadius: 15,
-    borderWidth: 3,
-    borderColor: '#FF6B6B',
+    marginBottom: 16,
+    borderRadius: 12,
+    borderWidth: 2,
+    borderColor: '#8B4513',
   },
   storyTitle: {
-    fontSize: 18,
+    fontSize: 17,
     fontWeight: 'bold',
     color: '#333',
-    marginBottom: 10,
+    marginBottom: 8,
   },
   storyContainer: {
-    padding: 15,
-    backgroundColor: '#FFF8DC',
+    padding: 14,
+    backgroundColor: '#FFF8E7',
     borderRadius: 10,
   },
   storyText: {
-    fontSize: 20,
+    fontSize: 18,
     color: '#333',
-    lineHeight: 30,
+    lineHeight: 28,
   },
   section: {
-    paddingHorizontal: 15,
-    marginBottom: 20,
+    marginBottom: 18,
   },
   sectionTitle: {
     fontSize: 16,
     fontWeight: 'bold',
-    color: '#333',
+    color: '#5D4E37',
     marginBottom: 10,
   },
   wordsContainer: {
     flexDirection: 'row',
     flexWrap: 'wrap',
+    gap: 8,
   },
   wordButton: {
     backgroundColor: '#fff',
-    paddingHorizontal: 15,
-    paddingVertical: 10,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
     borderRadius: 20,
-    margin: 5,
     borderWidth: 2,
-    borderColor: '#DDD',
+    borderColor: '#CCC',
+    minHeight: 44,
+    justifyContent: 'center',
   },
   selectedWord: {
-    backgroundColor: '#4CAF50',
-    borderColor: '#4CAF50',
+    backgroundColor: '#228B22',
+    borderColor: '#228B22',
   },
   wordText: {
-    fontSize: 14,
+    fontSize: 15,
     color: '#333',
   },
   selectedWordText: {
     color: '#fff',
     fontWeight: 'bold',
   },
+  footer: {
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    paddingBottom: 20,
+    backgroundColor: '#F5F0E6',
+    borderTopWidth: 2,
+    borderTopColor: '#8B4513',
+  },
   createButton: {
-    backgroundColor: '#4CAF50',
-    padding: 20,
-    margin: 15,
-    borderRadius: 15,
+    backgroundColor: '#228B22',
+    paddingVertical: 18,
+    paddingHorizontal: 24,
+    borderRadius: 14,
     alignItems: 'center',
+    justifyContent: 'center',
+    minHeight: 56,
+  },
+  createButtonDimmed: {
+    opacity: 0.85,
   },
   createButtonText: {
     color: '#fff',
     fontSize: 20,
     fontWeight: 'bold',
+  },
+  createButtonHint: {
+    color: '#fff',
+    fontSize: 12,
+    marginTop: 4,
+    opacity: 0.9,
   },
 });
 

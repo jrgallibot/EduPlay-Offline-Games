@@ -11,10 +11,12 @@ import {
 import { playSoundEffect, startBackgroundMusic, stopBackgroundMusic, playWinMusic, playLoseMusic } from '../../utils/sound';
 import { getGameProgress, updateGameProgress } from '../../database/db';
 import { RewardModal } from '../../components/RewardModal';
+import { GameGuide } from '../../components/GameGuide';
 
 interface Level {
   id: number;
   goal: string;
+  hint: string;
   blocks: string[];
   gridSize: { rows: number; cols: number };
   robotStart: { row: number; col: number };
@@ -24,7 +26,8 @@ interface Level {
 const levels: Level[] = [
   {
     id: 1,
-    goal: 'Move to the star!',
+    goal: 'Get the robot to the star ⭐',
+    hint: 'Tap MOVE twice, then tap Run. The robot moves right.',
     blocks: ['MOVE'],
     gridSize: { rows: 3, cols: 3 },
     robotStart: { row: 1, col: 0 },
@@ -32,7 +35,8 @@ const levels: Level[] = [
   },
   {
     id: 2,
-    goal: 'Turn and reach the star!',
+    goal: 'Get the robot to the star ⭐',
+    hint: 'Move right twice, then TURN (to face down), then move down twice.',
     blocks: ['MOVE', 'TURN'],
     gridSize: { rows: 3, cols: 3 },
     robotStart: { row: 0, col: 0 },
@@ -48,6 +52,7 @@ const CodeBlocksGame: React.FC = () => {
   const [robotDir, setRobotDir] = useState(0); // 0=right, 1=down, 2=left, 3=up
   const [isRunning, setIsRunning] = useState(false);
   const [showReward, setShowReward] = useState(false);
+  const [showGuide, setShowGuide] = useState(true);
 
   useEffect(() => {
     loadProgress();
@@ -77,14 +82,15 @@ const CodeBlocksGame: React.FC = () => {
   };
 
   const addBlock = (block: string) => {
-    setProgram([...program, block]);
+    setProgram((prev) => [...prev, block]);
   };
 
   const removeLastBlock = () => {
-    setProgram(program.slice(0, -1));
+    setProgram((prev) => (prev.length > 0 ? prev.slice(0, -1) : prev));
   };
 
   const runProgram = async () => {
+    if (program.length === 0) return;
     setIsRunning(true);
     const level = levels[currentLevel];
     let pos = { ...level.robotStart };
@@ -94,23 +100,21 @@ const CodeBlocksGame: React.FC = () => {
       await new Promise((resolve) => setTimeout(resolve, 500));
 
       if (block === 'MOVE') {
-        // Move in current direction
         if (dir === 0) pos.col++;
         else if (dir === 1) pos.row++;
         else if (dir === 2) pos.col--;
         else if (dir === 3) pos.row--;
 
-        // Bounds check
         if (
           pos.row < 0 ||
           pos.row >= level.gridSize.rows ||
           pos.col < 0 ||
           pos.col >= level.gridSize.cols
         ) {
-          Alert.alert('Oops!', 'Robot went out of bounds!');
-          await playLoseMusic(); // Play failure music
+          await playLoseMusic();
           setIsRunning(false);
           resetLevel();
+          Alert.alert('Out of bounds', 'The robot left the grid. Try a shorter path or use TURN.');
           return;
         }
 
@@ -121,39 +125,44 @@ const CodeBlocksGame: React.FC = () => {
       }
     }
 
-    // Check if reached star
-    if (
-      pos.row === level.starPosition.row &&
-      pos.col === level.starPosition.col
-    ) {
-      await playWinMusic(); // Play victory music
+    const reachedStar =
+      pos.row === level.starPosition.row && pos.col === level.starPosition.col;
+
+    if (reachedStar) {
+      await playWinMusic();
       const newScore = score + 50;
       setScore(newScore);
       const newLevelIndex = currentLevel + 1;
-      const newLevel = newLevelIndex + 1; // Convert to 1-based level
+      const newLevel = newLevelIndex + 1;
 
-      // Save progress for current level completion
       await updateGameProgress('code', {
         level: newLevel,
         score: newScore,
         stars: 3,
       });
 
-      if (currentLevel === levels.length - 1) {
+      setIsRunning(false);
+
+      if (currentLevel >= levels.length - 1) {
         setShowReward(true);
       } else {
-        Alert.alert('Success! 🎉', 'Level Complete!', [
-          { text: 'Next Level', onPress: () => setCurrentLevel(newLevelIndex) },
-        ]);
+        Alert.alert(
+          'Level complete! 🎉',
+          'Tap "Next level" to continue.',
+          [{ text: 'Next level', onPress: () => setCurrentLevel(newLevelIndex) }]
+        );
       }
-    } else {
-      await playLoseMusic(); // Play failure music
-      playSoundEffect('wrong');
-      Alert.alert('Not There Yet!', 'Try a different sequence!');
+      return;
     }
 
+    await playLoseMusic();
+    playSoundEffect('wrong');
     setIsRunning(false);
     resetLevel();
+    Alert.alert(
+      'Not at the star yet',
+      'Change your blocks and try again. Use Remove Last to undo.'
+    );
   };
 
   const level = levels[currentLevel];
@@ -171,11 +180,19 @@ const CodeBlocksGame: React.FC = () => {
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
         <Text style={styles.headerText}>
-          Level {currentLevel + 1} | Score: {score}
+          Level {currentLevel + 1} of {levels.length} | Score: {score}
         </Text>
       </View>
 
-      <ScrollView style={styles.scrollView}>
+      <View style={styles.objectiveBox}>
+        <Text style={styles.objectiveTitle}>🎯 Your goal</Text>
+        <Text style={styles.objectiveText}>
+          Build a program with the blocks below so the robot reaches the star ⭐. Tap blocks to add them to "Your program", then tap <Text style={styles.objectiveBold}>Run</Text>.
+        </Text>
+        <Text style={styles.levelHint}>{level.hint}</Text>
+      </View>
+
+      <ScrollView style={styles.scrollView} contentContainerStyle={styles.scrollContent}>
         <View style={styles.gameContainer}>
           <Text style={styles.goal}>{level.goal}</Text>
 
@@ -264,6 +281,25 @@ const CodeBlocksGame: React.FC = () => {
         rewardIcon="🚀"
         onClose={() => setShowReward(false)}
       />
+
+      <GameGuide
+        visible={showGuide}
+        onClose={() => setShowGuide(false)}
+        title="Code Blocks"
+        icon="🤖"
+        steps={[
+          { emoji: '🎯', text: 'Goal: get the robot 🤖 to the star ⭐ by building a program' },
+          { emoji: '📦', text: 'Tap a block (MOVE or TURN) to add it to "Your program"' },
+          { emoji: '▶️', text: 'Tap Run to run your program. The robot will move step by step' },
+          { emoji: '↩️', text: 'Wrong move? Tap "Remove Last" to remove the last block' },
+          { emoji: '🔄', text: 'Tap Reset to start the level over' },
+        ]}
+        tips={[
+          'MOVE = robot moves one step in the direction it is facing (→ ↓ ← ↑)',
+          'TURN = robot turns right (→ then ↓ then ← then ↑)',
+          'Add enough MOVE blocks to reach the star!',
+        ]}
+      />
     </SafeAreaView>
   );
 };
@@ -283,8 +319,42 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     textAlign: 'center',
   },
+  objectiveBox: {
+    backgroundColor: '#37474F',
+    marginHorizontal: 16,
+    marginTop: 12,
+    marginBottom: 8,
+    padding: 14,
+    borderRadius: 12,
+    borderWidth: 2,
+    borderColor: '#455A64',
+  },
+  objectiveTitle: {
+    fontSize: 17,
+    fontWeight: 'bold',
+    color: '#fff',
+    marginBottom: 6,
+  },
+  objectiveText: {
+    fontSize: 14,
+    color: '#ECEFF1',
+    lineHeight: 22,
+  },
+  objectiveBold: {
+    fontWeight: 'bold',
+    color: '#81C784',
+  },
+  levelHint: {
+    fontSize: 13,
+    color: '#B0BEC5',
+    marginTop: 10,
+    fontStyle: 'italic',
+  },
   scrollView: {
     flex: 1,
+  },
+  scrollContent: {
+    paddingBottom: 24,
   },
   gameContainer: {
     padding: 20,

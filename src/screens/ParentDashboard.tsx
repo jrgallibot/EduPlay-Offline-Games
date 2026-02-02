@@ -9,6 +9,7 @@ import {
   Modal,
   TextInput,
   Alert,
+  Platform,
 } from 'react-native';
 import { ProgressBar } from '../components/ProgressBar';
 import { useUserStore } from '../store/userStore';
@@ -155,8 +156,13 @@ ${progressData.map((game) =>
   };
 
   return (
-    <SafeAreaView style={styles.container}>
-      <ScrollView>
+    <SafeAreaView style={[styles.container, Platform.OS === 'web' && styles.containerWeb]}>
+      <View style={[styles.scrollWrapper, Platform.OS === 'web' && styles.scrollWrapperWeb]}>
+        <ScrollView
+          style={styles.scrollView}
+          contentContainerStyle={styles.scrollContent}
+          showsVerticalScrollIndicator={true}
+        >
         <View style={styles.header}>
           <Text style={styles.title}>Parent Dashboard</Text>
           {user && (
@@ -251,7 +257,8 @@ ${progressData.map((game) =>
             <Text style={[styles.settingText, styles.dangerText]}>🗑️ Reset All Progress</Text>
           </TouchableOpacity>
         </View>
-      </ScrollView>
+        </ScrollView>
+      </View>
 
       {/* Screen Time Modal */}
       <Modal
@@ -348,6 +355,22 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#F5F5F5',
+  },
+  containerWeb: {
+    minHeight: 0,
+  },
+  scrollWrapper: {
+    flex: 1,
+  },
+  scrollWrapperWeb: {
+    minHeight: 0,
+    overflow: 'hidden',
+  },
+  scrollView: {
+    flex: 1,
+  },
+  scrollContent: {
+    paddingBottom: 40,
   },
   header: {
     padding: 20,

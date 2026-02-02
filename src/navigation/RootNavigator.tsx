@@ -54,6 +54,8 @@ const RootNavigator = () => {
         headerTitleStyle: {
           fontWeight: 'bold',
         },
+        // Required for ScrollView to get bounded height on web (flex chain)
+        cardStyle: { flex: 1 },
       }}
     >
       <Stack.Screen

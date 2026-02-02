@@ -286,16 +286,21 @@ export const playAnimalSound = async (animalKey: string) => {
   }
 
   const sequence = ANIMAL_TONES[key];
-  if (!sequence || !FileSystem.cacheDirectory) return;
+  if (!sequence) return;
+  const useDataUri = !FileSystem.cacheDirectory;
   try {
     for (let i = 0; i < sequence.length; i++) {
       const { note, octave, duration } = sequence[i];
       const frequency = getNoteFrequency(note, octave);
       const base64 = getWavBase64(frequency, duration, 0.3);
-      const uri = `${FileSystem.cacheDirectory}animal_tone_${Date.now()}_${i}.wav`;
-      await FileSystem.writeAsStringAsync(uri, base64, {
-        encoding: FileSystem.EncodingType.Base64,
-      });
+      const uri = useDataUri
+        ? `data:audio/wav;base64,${base64}`
+        : `${FileSystem.cacheDirectory}animal_tone_${Date.now()}_${i}.wav`;
+      if (!useDataUri) {
+        await FileSystem.writeAsStringAsync(uri, base64, {
+          encoding: FileSystem.EncodingType.Base64,
+        });
+      }
       const { sound } = await Audio.Sound.createAsync({ uri });
       await sound.playAsync();
       await new Promise((r) => setTimeout(r, duration + 80));
@@ -348,15 +353,22 @@ export const setMusicEnabled = (enabled: boolean) => {
   }
 };
 
-// Cleanup all audio
+// Cleanup all audio (call when leaving a game so sounds and music stop)
 export const cleanupAudio = async () => {
+  try {
+    await Speech.stop();
+  } catch (_) {}
   await stopBackgroundMusic();
   if (winSound) {
-    await winSound.unloadAsync();
+    try {
+      await winSound.unloadAsync();
+    } catch (_) {}
     winSound = null;
   }
   if (loseSound) {
-    await loseSound.unloadAsync();
+    try {
+      await loseSound.unloadAsync();
+    } catch (_) {}
     loseSound = null;
   }
 };

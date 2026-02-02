@@ -1,4 +1,5 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { useFocusEffect } from '@react-navigation/native';
 import {
   View,
   Text,
@@ -8,7 +9,7 @@ import {
   ScrollView,
   Alert,
 } from 'react-native';
-import { playSoundEffect, startBackgroundMusic, stopBackgroundMusic, playWinMusic, playLoseMusic, initializeAudio, loadSoundSetting } from '../../utils/sound';
+import { playSoundEffect, startBackgroundMusic, stopBackgroundMusic, playWinMusic, playLoseMusic, cleanupAudio, initializeAudio, loadSoundSetting } from '../../utils/sound';
 import { getGameProgress, updateGameProgress } from '../../database/db';
 import { getDifficulty, scaleLevel } from '../../utils/difficulty';
 import { RewardModal } from '../../components/RewardModal';
@@ -35,6 +36,14 @@ const MusicRhythmGame: React.FC = () => {
   const hitsRef = useRef(0);
 
   const notes = ['🎵', '🎶', '🎼', '🎹'];
+
+  useFocusEffect(
+    useCallback(() => {
+      return () => {
+        cleanupAudio();
+      };
+    }, [])
+  );
 
   useEffect(() => {
     loadProgress();

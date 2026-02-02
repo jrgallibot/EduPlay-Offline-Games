@@ -1,4 +1,5 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { useFocusEffect } from '@react-navigation/native';
 import {
   View,
   Text,
@@ -8,7 +9,7 @@ import {
   ScrollView,
 } from 'react-native';
 import * as Speech from 'expo-speech';
-import { playSoundEffect, startBackgroundMusic, stopBackgroundMusic, playWinMusic, initializeAudio, loadSoundSetting } from '../../utils/sound';
+import { playSoundEffect, startBackgroundMusic, stopBackgroundMusic, playWinMusic, cleanupAudio, initializeAudio, loadSoundSetting } from '../../utils/sound';
 import { getGameProgress, updateGameProgress } from '../../database/db';
 import { getDifficulty, scaleNeeded, scaleChoices } from '../../utils/difficulty';
 import { RewardModal } from '../../components/RewardModal';
@@ -35,6 +36,14 @@ const LetterPopBalloonsGame: React.FC = () => {
   const neededPerLevel = getNeededPerLevel(level);
   const targetLetter = round?.targetLetter ?? '';
   const balloons = round?.balloons ?? [];
+
+  useFocusEffect(
+    useCallback(() => {
+      return () => {
+        cleanupAudio();
+      };
+    }, [])
+  );
 
   useEffect(() => {
     loadProgress();

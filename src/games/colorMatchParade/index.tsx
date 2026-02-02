@@ -1,4 +1,5 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { useFocusEffect } from '@react-navigation/native';
 import {
   View,
   Text,
@@ -7,7 +8,7 @@ import {
   SafeAreaView,
   ScrollView,
 } from 'react-native';
-import { playSoundEffect, startBackgroundMusic, stopBackgroundMusic, playWinMusic, initializeAudio, loadSoundSetting } from '../../utils/sound';
+import { playSoundEffect, startBackgroundMusic, stopBackgroundMusic, playWinMusic, cleanupAudio, initializeAudio, loadSoundSetting } from '../../utils/sound';
 import { getGameProgress, updateGameProgress } from '../../database/db';
 import { getDifficulty, scaleNeeded } from '../../utils/difficulty';
 import { RewardModal } from '../../components/RewardModal';
@@ -48,6 +49,14 @@ const ColorMatchParadeGame: React.FC = () => {
   const scoreRef = useRef(0);
 
   const neededPerLevel = getNeededPerLevel(level);
+
+  useFocusEffect(
+    useCallback(() => {
+      return () => {
+        cleanupAudio();
+      };
+    }, [])
+  );
 
   useEffect(() => {
     loadProgress();

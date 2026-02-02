@@ -1,4 +1,5 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { useFocusEffect } from '@react-navigation/native';
 import {
   View,
   Text,
@@ -7,7 +8,7 @@ import {
   SafeAreaView,
   ScrollView,
 } from 'react-native';
-import { playSoundEffect, startBackgroundMusic, stopBackgroundMusic, playWinMusic, playAnimalSound, initializeAudio, loadSoundSetting } from '../../utils/sound';
+import { playSoundEffect, startBackgroundMusic, stopBackgroundMusic, playWinMusic, playAnimalSound, cleanupAudio, initializeAudio, loadSoundSetting } from '../../utils/sound';
 import { getGameProgress, updateGameProgress } from '../../database/db';
 import { getDifficulty, scaleNeeded, scaleChoices } from '../../utils/difficulty';
 import { RewardModal } from '../../components/RewardModal';
@@ -42,6 +43,14 @@ const AnimalSoundMatchGame: React.FC = () => {
   const [isAnswerLocked, setIsAnswerLocked] = useState(false);
   const correctCountRef = useRef(0);
   const scoreRef = useRef(0);
+
+  useFocusEffect(
+    useCallback(() => {
+      return () => {
+        cleanupAudio();
+      };
+    }, [])
+  );
 
   useEffect(() => {
     let cancelled = false;

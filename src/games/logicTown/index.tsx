@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
+import { useFocusEffect } from '@react-navigation/native';
 import {
   View,
   Text,
@@ -8,7 +9,7 @@ import {
   Alert,
   ScrollView,
 } from 'react-native';
-import { playSoundEffect, startBackgroundMusic, stopBackgroundMusic, playWinMusic, playLoseMusic } from '../../utils/sound';
+import { playSoundEffect, startBackgroundMusic, stopBackgroundMusic, playWinMusic, playLoseMusic, cleanupAudio } from '../../utils/sound';
 import { speak } from '../../utils/voice';
 import { getGameProgress, updateGameProgress } from '../../database/db';
 import { getDifficulty } from '../../utils/difficulty';
@@ -33,6 +34,14 @@ const LogicTownGame: React.FC = () => {
   const [showGuide, setShowGuide] = useState(true); // Show guide on first load
 
   const gridSize = 5;
+
+  useFocusEffect(
+    useCallback(() => {
+      return () => {
+        cleanupAudio();
+      };
+    }, [])
+  );
 
   useEffect(() => {
     loadProgress();

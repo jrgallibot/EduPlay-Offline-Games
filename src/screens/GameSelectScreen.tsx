@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { View, Text, StyleSheet, ScrollView, SafeAreaView } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, SafeAreaView, Platform } from 'react-native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { RootStackParamList } from '../navigation/RootNavigator';
 import { GameCard } from '../components/GameCard';
@@ -46,7 +46,7 @@ const GameSelectScreen: React.FC<Props> = ({ navigation }) => {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={[styles.container, Platform.OS === 'web' && styles.containerWeb]}>
       <View style={styles.header}>
         <Text style={styles.headerEmoji}>🎮</Text>
         <Text style={styles.headerTitle}>Choose Your Game!</Text>
@@ -55,32 +55,35 @@ const GameSelectScreen: React.FC<Props> = ({ navigation }) => {
           <Text style={styles.badgeText}>{games.length} Games</Text>
         </View>
       </View>
-      <ScrollView
-        contentContainerStyle={styles.scrollContent}
-        showsVerticalScrollIndicator={false}
-      >
-        <Text style={styles.sectionLabel}>All games</Text>
-        <View style={styles.gamesGrid}>
-          {games.map((game) => {
-            const gameProgress = progress[game.key] || {
-              level: 1,
-              stars: 0,
-            };
-            return (
-              <GameCard
-                key={game.key}
-                title={game.title}
-                icon={game.icon}
-                level={gameProgress.level}
-                stars={gameProgress.stars}
-                onPress={() =>
-                  navigation.navigate(game.screen as keyof RootStackParamList)
-                }
-              />
-            );
-          })}
-        </View>
-      </ScrollView>
+      <View style={[styles.scrollWrapper, Platform.OS === 'web' && styles.scrollWrapperWeb]}>
+        <ScrollView
+          style={styles.scrollView}
+          contentContainerStyle={styles.scrollContent}
+          showsVerticalScrollIndicator={true}
+        >
+          <Text style={styles.sectionLabel}>All games</Text>
+          <View style={styles.gamesGrid}>
+            {games.map((game) => {
+              const gameProgress = progress[game.key] || {
+                level: 1,
+                stars: 0,
+              };
+              return (
+                <GameCard
+                  key={game.key}
+                  title={game.title}
+                  icon={game.icon}
+                  level={gameProgress.level}
+                  stars={gameProgress.stars}
+                  onPress={() =>
+                    navigation.navigate(game.screen as keyof RootStackParamList)
+                  }
+                />
+              );
+            })}
+          </View>
+        </ScrollView>
+      </View>
     </SafeAreaView>
   );
 };
@@ -89,6 +92,19 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#E8F5E9',
+  },
+  containerWeb: {
+    minHeight: 0,
+  },
+  scrollWrapper: {
+    flex: 1,
+  },
+  scrollWrapperWeb: {
+    minHeight: 0,
+    overflow: 'hidden',
+  },
+  scrollView: {
+    flex: 1,
   },
   header: {
     paddingVertical: 20,

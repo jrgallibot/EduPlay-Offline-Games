@@ -9,6 +9,7 @@ import {
   SafeAreaView,
   ScrollView,
   Image,
+  Platform,
 } from 'react-native';
 
 // App logo for header and setup screens
@@ -61,7 +62,7 @@ const HomeScreen: React.FC<Props> = ({ navigation }) => {
 
   if (showSetup) {
     return (
-      <SafeAreaView style={styles.containerSetup}>
+      <SafeAreaView style={[styles.containerSetup, Platform.OS === 'web' && styles.containerWeb]}>
         <View style={styles.setupHeader}>
           <View style={styles.setupLogoCircle}>
             <Image source={APP_LOGO} style={styles.setupLogoImage} resizeMode="cover" />
@@ -107,50 +108,59 @@ const HomeScreen: React.FC<Props> = ({ navigation }) => {
   }
 
   return (
-    <SafeAreaView style={styles.container}>
-      <View style={styles.header}>
-        <View style={styles.headerLogoCircle}>
-          <Image source={APP_LOGO} style={styles.headerLogoImage} resizeMode="cover" />
-        </View>
-        <Text style={styles.headerTitle}>EduPlay Offline</Text>
-        <Text style={styles.headerTagline}>
-          15 Learning Games • No Internet Needed
-        </Text>
-        <View style={styles.badge}>
-          <Text style={styles.badgeText}>15 Games</Text>
-        </View>
-      </View>
-
-      <View style={styles.content}>
-        {user && (
-          <Text style={styles.welcome}>Hi, {user.name}! 👋</Text>
-        )}
-        <TouchableOpacity
-          style={styles.playButton}
-          onPress={() => navigation.navigate('GameSelect')}
-          activeOpacity={0.85}
+    <SafeAreaView style={[styles.container, Platform.OS === 'web' && styles.containerWeb]}>
+      <View style={[styles.scrollWrapper, Platform.OS === 'web' && styles.scrollWrapperWeb]}>
+        <ScrollView
+          style={Platform.OS === 'web' ? styles.scrollViewWeb : undefined}
+          contentContainerStyle={styles.homeScrollContent}
+          showsVerticalScrollIndicator={true}
+          keyboardShouldPersistTaps="handled"
         >
-          <Text style={styles.playButtonText}>🎯 Play Games</Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          style={styles.parentButton}
-          onPress={() => navigation.navigate('ParentDashboard')}
-          activeOpacity={0.85}
-        >
-          <Text style={styles.parentButtonText}>👨‍👩‍👧 Parent Dashboard</Text>
-        </TouchableOpacity>
-      </View>
+          <View style={styles.header}>
+            <View style={styles.headerLogoCircle}>
+              <Image source={APP_LOGO} style={styles.headerLogoImage} resizeMode="cover" />
+            </View>
+            <Text style={styles.headerTitle}>EduPlay Offline</Text>
+            <Text style={styles.headerTagline}>
+              15 Learning Games • No Internet Needed
+            </Text>
+            <View style={styles.badge}>
+              <Text style={styles.badgeText}>15 Games</Text>
+            </View>
+          </View>
 
-      <View style={styles.footer}>
-        <View style={styles.footerRow}>
-          <Text style={styles.footerText}>✔ No Internet</Text>
-          <Text style={styles.footerText}>✔ No Ads</Text>
-          <Text style={styles.footerText}>✔ 100% Safe</Text>
-        </View>
-        <View style={styles.footerCredit}>
-          <Text style={styles.footerCreditLabel}>Developed by</Text>
-          <Text style={styles.footerCreditName}>Russel Gallibot</Text>
-        </View>
+          <View style={styles.content}>
+            {user && (
+              <Text style={styles.welcome}>Hi, {user.name}! 👋</Text>
+            )}
+            <TouchableOpacity
+              style={styles.playButton}
+              onPress={() => navigation.navigate('GameSelect')}
+              activeOpacity={0.85}
+            >
+              <Text style={styles.playButtonText}>🎯 Play Games</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.parentButton}
+              onPress={() => navigation.navigate('ParentDashboard')}
+              activeOpacity={0.85}
+            >
+              <Text style={styles.parentButtonText}>👨‍👩‍👧 Parent Dashboard</Text>
+            </TouchableOpacity>
+          </View>
+
+          <View style={styles.footer}>
+            <View style={styles.footerRow}>
+              <Text style={styles.footerText}>✔ No Internet</Text>
+              <Text style={styles.footerText}>✔ No Ads</Text>
+              <Text style={styles.footerText}>✔ 100% Safe</Text>
+            </View>
+            <View style={styles.footerCredit}>
+              <Text style={styles.footerCreditLabel}>Developed by</Text>
+              <Text style={styles.footerCreditName}>Russel Gallibot</Text>
+            </View>
+          </View>
+        </ScrollView>
       </View>
     </SafeAreaView>
   );
@@ -160,6 +170,23 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#E8F5E9',
+  },
+  containerWeb: {
+    minHeight: 0,
+  },
+  scrollWrapper: {
+    flex: 1,
+  },
+  scrollWrapperWeb: {
+    minHeight: 0,
+    overflow: 'hidden',
+  },
+  scrollViewWeb: {
+    flex: 1,
+  },
+  homeScrollContent: {
+    flexGrow: 1,
+    paddingBottom: 24,
   },
   containerSetup: {
     flex: 1,

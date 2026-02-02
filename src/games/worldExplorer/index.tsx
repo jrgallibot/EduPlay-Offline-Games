@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
+import { useFocusEffect } from '@react-navigation/native';
 import {
   View,
   Text,
@@ -9,7 +10,7 @@ import {
   Alert,
 } from 'react-native';
 import { shuffle } from '../../utils/math';
-import { playSoundEffect, startBackgroundMusic, stopBackgroundMusic, playWinMusic, playLoseMusic } from '../../utils/sound';
+import { playSoundEffect, startBackgroundMusic, stopBackgroundMusic, playWinMusic, playLoseMusic, cleanupAudio } from '../../utils/sound';
 import { getGameProgress, updateGameProgress } from '../../database/db';
 import { getDifficulty } from '../../utils/difficulty';
 import { RewardModal } from '../../components/RewardModal';
@@ -107,6 +108,14 @@ const WorldExplorerGame: React.FC = () => {
   const [level, setLevel] = useState(1);
   const [showReward, setShowReward] = useState(false);
   const [showGuide, setShowGuide] = useState(true);
+
+  useFocusEffect(
+    useCallback(() => {
+      return () => {
+        cleanupAudio();
+      };
+    }, [])
+  );
 
   useEffect(() => {
     loadProgress();

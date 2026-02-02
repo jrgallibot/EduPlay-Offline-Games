@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
+import { useFocusEffect } from '@react-navigation/native';
 import {
   View,
   Text,
@@ -8,7 +9,7 @@ import {
   ScrollView,
   Alert,
 } from 'react-native';
-import { playSoundEffect, startBackgroundMusic, stopBackgroundMusic, playWinMusic } from '../../utils/sound';
+import { playSoundEffect, startBackgroundMusic, stopBackgroundMusic, playWinMusic, cleanupAudio } from '../../utils/sound';
 import { getGameProgress, updateGameProgress } from '../../database/db';
 import { getDifficulty } from '../../utils/difficulty';
 import { RewardModal } from '../../components/RewardModal';
@@ -59,6 +60,14 @@ const EcoGuardiansGame: React.FC = () => {
   const [currentMission, setCurrentMission] = useState<Mission | null>(null);
   const [missionProgress, setMissionProgress] = useState(0);
   const [showReward, setShowReward] = useState(false);
+
+  useFocusEffect(
+    useCallback(() => {
+      return () => {
+        cleanupAudio();
+      };
+    }, [])
+  );
 
   useEffect(() => {
     loadProgress();

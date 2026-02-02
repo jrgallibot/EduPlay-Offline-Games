@@ -155,7 +155,8 @@ Educative Games/
    npx expo start --clear
    ```
 
-4. **Run on device:**
+4. **Run on device or web:**
+   - **Web (browser):** Press `w` in the terminal, or run `npm run start:web` / `npm run web` to open directly in the browser. All 15 games, Parent Dashboard, progress, and settings work the same as on mobile (data stored in localStorage).
    - Press `a` for Android emulator
    - Press `i` for iOS simulator (Mac)
    - Or scan QR code with Expo Go (development build recommended for full features)
@@ -215,7 +216,7 @@ Requires an Apple Developer account and EAS configured for iOS.
 - ✅ No tracking or analytics
 - ✅ No chat or external links in gameplay
 - ✅ Parent controls: difficulty, screen time, sounds, reset
-- ✅ All data stays on device (SQLite)
+- ✅ All data stays on device (SQLite on mobile; localStorage in browser)
 
 ---
 
@@ -223,7 +224,7 @@ Requires an Apple Developer account and EAS configured for iOS.
 
 - ✅ **Android** (phone & tablet) – APK and AAB
 - ✅ **iOS** (iPhone & iPad) – via EAS
-- ⚠️ Web – limited (Expo web); best experience on native
+- ✅ **Web** – full access: run `npm start` then press `w`, or `npm run start:web`. Same games, Parent Dashboard, progress (localStorage); best experience on native for touch
 
 ---
 

@@ -1,4 +1,5 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { useFocusEffect } from '@react-navigation/native';
 import {
   View,
   Text,
@@ -8,7 +9,7 @@ import {
   Alert,
 } from 'react-native';
 import { generateMathQuestion, calculateStars } from '../../utils/math';
-import { playSoundEffect, startBackgroundMusic, stopBackgroundMusic, playWinMusic, playLoseMusic } from '../../utils/sound';
+import { playSoundEffect, startBackgroundMusic, stopBackgroundMusic, playWinMusic, playLoseMusic, cleanupAudio } from '../../utils/sound';
 import { getGameProgress, updateGameProgress } from '../../database/db';
 import { getDifficulty } from '../../utils/difficulty';
 import { ProgressBar } from '../../components/ProgressBar';
@@ -28,6 +29,14 @@ const MathMonstersGame: React.FC = () => {
   const [isAnswering, setIsAnswering] = useState(false);
   const progressLoadedRef = useRef(false);
   const levelCompleteRef = useRef(false);
+
+  useFocusEffect(
+    useCallback(() => {
+      return () => {
+        cleanupAudio();
+      };
+    }, [])
+  );
 
   useEffect(() => {
     let cancelled = false;

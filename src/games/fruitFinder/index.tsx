@@ -1,4 +1,5 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { useFocusEffect } from '@react-navigation/native';
 import {
   View,
   Text,
@@ -10,7 +11,7 @@ import {
   ScrollView,
 } from 'react-native';
 import * as Speech from 'expo-speech';
-import { playSoundEffect, startBackgroundMusic, stopBackgroundMusic, playWinMusic, playLoseMusic } from '../../utils/sound';
+import { playSoundEffect, startBackgroundMusic, stopBackgroundMusic, playWinMusic, playLoseMusic, cleanupAudio } from '../../utils/sound';
 import { getGameProgress, updateGameProgress } from '../../database/db';
 import { getDifficulty, scaleNeeded } from '../../utils/difficulty';
 import { RewardModal } from '../../components/RewardModal';
@@ -86,6 +87,14 @@ const FruitFinderGame: React.FC = () => {
   const [choices, setChoices] = useState<Choice[]>([]);
   const correctCountRef = React.useRef(0);
   const speakTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useFocusEffect(
+    useCallback(() => {
+      return () => {
+        cleanupAudio();
+      };
+    }, [])
+  );
 
   useEffect(() => {
     loadProgress();
